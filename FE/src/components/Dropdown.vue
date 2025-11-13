@@ -13,9 +13,13 @@
         @input="searchTerm = $event.target.value"
         @focus="open = true"
         :placeholder="placeholder"
-        class="w-full px-4 py-3 bg-white border text-sm text-black border-gray-300 rounded-lg pr-10 transition-all"
+        class="w-full px-4 py-3 pr-12 bg-white border text-sm text-black border-gray-300 rounded-lg transition-all focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
       />
-      <button @click="toggleDropdown" class="absolute right-3 top-1/2 -translate-y-1/2">
+      <button
+        @click="toggleDropdown"
+        type="button"
+        class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center hover:bg-gray-100 rounded p-1 transition-colors"
+      >
         <svg
           :class="['w-5 h-5 text-gray-400 transition-transform', open ? 'rotate-180' : '']"
           fill="none"
@@ -36,13 +40,17 @@
     <button
       v-else
       @click="open = !open"
-      class="w-full px-4 py-3 bg-white border text-sm border-gray-300 rounded-lg text-left flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+      type="button"
+      class="w-full px-4 py-3 bg-white border text-sm border-gray-300 rounded-lg text-left flex items-center justify-between hover:border-gray-400 transition-all focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
     >
       <span :class="!modelValue || modelValue === placeholder ? 'text-gray-400' : 'text-gray-700'">
         {{ modelValue || placeholder }}
       </span>
       <svg
-        :class="['w-5 h-5 text-gray-400 transition-transform', open ? 'rotate-180' : '']"
+        :class="[
+          'w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ml-2',
+          open ? 'rotate-180' : '',
+        ]"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -56,10 +64,22 @@
       v-if="open"
       class="absolute z-10 w-full mt-2 text-base bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto"
     >
+      <!-- 🆕 NEW: Clear Option -->
+      <button
+        v-if="modelValue && allowClear"
+        @click="clearSelection"
+        type="button"
+        class="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors text-red-600 font-medium border-b border-gray-200 flex items-center gap-2"
+      >
+        {{ clearText }}
+      </button>
+
+      <!-- Regular Options -->
       <button
         v-for="(option, index) in filteredOptions"
         :key="index"
         @click="selectOption(option)"
+        type="button"
         :class="[
           'w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors',
           modelValue === option ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-700',
@@ -99,6 +119,15 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  // 🆕 NEW PROPS
+  allowClear: {
+    type: Boolean,
+    default: true,
+  },
+  clearText: {
+    type: String,
+    default: 'Kosongkan pilihan',
+  },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -110,7 +139,6 @@ const inputRef = ref(null)
 
 const filteredOptions = computed(() => {
   if (!props.searchable) return props.options
-
   return props.options.filter((option) =>
     option.toLowerCase().includes(searchTerm.value.toLowerCase()),
   )
@@ -118,6 +146,13 @@ const filteredOptions = computed(() => {
 
 const selectOption = (option) => {
   emit('update:modelValue', option)
+  open.value = false
+  searchTerm.value = ''
+}
+
+// 🆕 NEW METHOD
+const clearSelection = () => {
+  emit('update:modelValue', '')
   open.value = false
   searchTerm.value = ''
 }
