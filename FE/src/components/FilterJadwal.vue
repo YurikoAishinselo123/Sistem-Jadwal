@@ -1,0 +1,135 @@
+<!-- FilterJadwal.vue -->
+<template>
+  <div class="bg-white shadow-md rounded-2xl p-6 w-full">
+    <h2 class="text-lg text-black font-semibold mb-4">Filter Jadwal</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <!-- Periode Tahun Ajaran -->
+      <Dropdown
+        v-model="filters.periodeTahunAjaran"
+        :options="options.periodeTahunAjaran"
+        placeholder="Periode Tahun Ajaran"
+        :searchable="false"
+      />
+
+      <!-- Hari -->
+      <Dropdown
+        v-model="filters.hari"
+        :options="options.hari"
+        placeholder="Hari"
+        :searchable="true"
+      />
+
+      <!-- Program Studi -->
+      <Dropdown
+        v-model="filters.programStudi"
+        :options="options.programStudi"
+        placeholder="Program Studi"
+        :searchable="true"
+      />
+
+      <!-- Mata Kuliah -->
+      <Dropdown
+        v-model="filters.mataKuliah"
+        :options="options.mataKuliah"
+        placeholder="Mata Kuliah"
+        :searchable="true"
+      />
+
+      <!-- Dosen -->
+      <Dropdown
+        v-model="filters.dosen"
+        :options="options.dosen"
+        placeholder="Dosen"
+        :searchable="true"
+      />
+
+      <!-- Laboran -->
+      <Dropdown
+        v-model="filters.laboran"
+        :options="options.laboran"
+        placeholder="Laboran"
+        :searchable="true"
+      />
+
+      <!-- Waktu Perkuliahan -->
+      <Dropdown
+        v-model="filters.waktuPerkuliahan"
+        :options="options.waktuPerkuliahan"
+        placeholder="Waktu Perkuliahan"
+        :searchable="true"
+      />
+
+      <!-- Reset Button -->
+      <button
+        @click="resetFilter"
+        class="bg-active-blue hover:bg-hover-button text-white font-semibold py-2.5 px-6 rounded-xl shadow-sm transition-all duration-200 focus:outline-none"
+      >
+        Reset Filter
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { reactive, watch } from 'vue'
+import Dropdown from './Dropdown.vue'
+
+// Props declaration
+const props = defineProps<{
+  options: {
+    periodeTahunAjaran: string[]
+    hari: string[]
+    programStudi: string[]
+    mataKuliah: string[]
+    dosen: string[]
+    laboran: string[]
+    waktuPerkuliahan: string[]
+  }
+}>()
+
+// Define filter type
+interface Filters {
+  periodeTahunAjaran: string
+  hari: string
+  programStudi: string
+  mataKuliah: string
+  dosen: string
+  laboran: string
+  waktuPerkuliahan: string
+}
+
+// Emits declaration
+const emit = defineEmits<{
+  (e: 'filter-change', filters: Filters): void
+  (e: 'reset'): void
+}>()
+
+// Reactive filter model
+const filters = reactive<Filters>({
+  periodeTahunAjaran: '',
+  hari: '',
+  programStudi: '',
+  mataKuliah: '',
+  dosen: '',
+  laboran: '',
+  waktuPerkuliahan: '',
+})
+
+// Reset function
+const resetFilter = () => {
+  Object.keys(filters).forEach((key) => {
+    filters[key as keyof typeof filters] = ''
+  })
+  emit('reset')
+}
+
+// Watch for changes and emit
+watch(
+  filters,
+  (newFilters) => {
+    emit('filter-change', newFilters)
+  },
+  { deep: true },
+)
+</script>
