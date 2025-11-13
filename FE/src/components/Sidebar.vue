@@ -4,6 +4,7 @@ import DashboardIcon from '../assets/image/Dashboard_icon.svg'
 import AddIcon from '../assets/image/Add_icon.svg'
 import ChartIcon from '../assets/image/Chart_icon.svg'
 import DoorIcon from '../assets/image/Door_icon.svg'
+import MasterDataIcon from '../assets/image/Data_icon.svg'
 </script>
 
 <template>
@@ -55,6 +56,14 @@ import DoorIcon from '../assets/image/Door_icon.svg'
         <div class="table-cell align-middle pl-4 text-md font-medium text-black">
           Beban Ruang Kelas
         </div>
+      </a>
+
+      <a href="/" class="table-row hover:bg-hover-blue transition-colors cursor-pointer rounded-lg">
+        <div class="table-cell w-16 align-middle text-center py-6 pl-5">
+          <img :src="MasterDataIcon" alt="Master Data Icon" class="w-6 h-auto mx-auto" />
+        </div>
+
+        <div class="table-cell align-middle pl-4 text-md font-medium text-black">Master Data</div>
       </a>
     </div>
   </nav>
