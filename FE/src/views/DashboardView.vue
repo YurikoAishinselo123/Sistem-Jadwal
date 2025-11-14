@@ -1,6 +1,8 @@
 <template>
-  <p class="text-4xl font-bold text-black">Dashboard Jadwal Perkuliahan</p>
-  <p class="text-xl font-base text-black mb-8">Monitor dan kelola perkuliahan kampus</p>
+  <p class="text-xl sm:text-3xl font-bold text-black mt-12 sm:mt-10 xl:mt-0">
+    Dashboard Jadwal Perkuliahan
+  </p>
+  <p class="text-sm sm:text-lg font-base text-black mb-8">Monitor dan kelola perkuliahan kampus</p>
   <FilterJadwal
     :options="filterOptions"
     @filter-change="handleFilterChange"
@@ -9,15 +11,18 @@
   />
 
   <!-- Table with merged header -->
-  <DashboardTable
-    :columns="columns"
-    :data="filteredData"
-    :has-actions="true"
-    @edit="handleEdit"
-    @delete="handleDelete"
-    @print="handlePrint"
-  >
-  </DashboardTable>
+  <div class="relative w-full">
+    <div class="overflow-x-auto w-full">
+      <DashboardTable
+        :columns="columns"
+        :data="filteredData"
+        :has-actions="true"
+        @edit="handleEdit"
+        @delete="handleDelete"
+        @print="handlePrint"
+      />
+    </div>
+  </div>
 </template>
 
 <script lang="ts" setup>

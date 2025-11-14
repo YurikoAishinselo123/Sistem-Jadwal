@@ -1,4 +1,3 @@
-<!-- FilterJadwal.vue -->
 <template>
   <div class="bg-white shadow-md rounded-2xl p-6 w-full">
     <h2 class="text-lg text-black font-semibold mb-4">Filter Jadwal</h2>

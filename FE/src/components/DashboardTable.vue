@@ -17,8 +17,8 @@
     </div>
 
     <!-- Table Section -->
-    <div class="overflow-x-auto">
-      <table class="min-w-full divide-y divide-gray-200">
+    <div class="w-full overflow-x-auto max-w-full">
+      <table class="w-full min-w-max divide-y divide-gray-200">
         <!-- Table Header -->
         <thead class="bg-header-table">
           <tr>
@@ -66,7 +66,7 @@
             </td>
 
             <!-- Actions -->
-            <td v-if="hasActions" class="px-6 py-4 whitespace-nowrap text-center">
+            <td v-if="hasActions" class="px-6 py-4 text-center">
               <div class="flex items-center justify-center gap-3">
                 <button @click="$emit('edit', row)">
                   <img :src="EditIcon" alt="Edit Icon" class="w-7 h-auto" />
