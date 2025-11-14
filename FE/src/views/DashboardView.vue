@@ -1,8 +1,9 @@
 <template>
-  <p class="text-xl sm:text-3xl font-bold text-black mt-12 sm:mt-10 xl:mt-0">
-    Dashboard Jadwal Perkuliahan
-  </p>
-  <p class="text-sm sm:text-lg font-base text-black mb-8">Monitor dan kelola perkuliahan kampus</p>
+  <div class="mb-8 mt-12 sm:mt-10 xl:mt-0">
+    <p class="text-xl sm:text-3xl font-bold text-black">Dashboard Jadwal Perkuliahan</p>
+    <p class="text-sm sm:text-lg font-base text-black">Monitor dan kelola perkuliahan kampus</p>
+  </div>
+
   <FilterJadwal
     :options="filterOptions"
     @filter-change="handleFilterChange"
