@@ -18,7 +18,7 @@
 
     <!-- Table Section -->
     <div class="w-full overflow-x-auto max-w-full">
-      <table class="w-full min-w-max divide-y divide-gray-200">
+      <table class="min-w-full divide-y divide-gray-200">
         <!-- Table Header -->
         <thead class="bg-header-table">
           <tr>
@@ -41,11 +41,7 @@
         <!-- Table Body -->
         <tbody class="bg-white divide-y divide-gray-200 text-gray-800">
           <tr v-for="(row, rowIndex) in data" :key="rowIndex">
-            <td
-              v-for="column in columns"
-              :key="column.key"
-              class="px-4 py-4 whitespace-normal text-xs align-middle"
-            >
+            <td v-for="column in columns" :key="column.key" class="px-4 py-4 text-xs align-middle">
               <!-- Mata Kuliah: break line after 2nd word -->
               <template v-if="column.key === 'mataKuliah'">
                 <span v-html="formatMataKuliah(row[column.key])"></span>
@@ -69,10 +65,10 @@
             <td v-if="hasActions" class="px-6 py-4 text-center">
               <div class="flex items-center justify-center gap-3">
                 <button @click="$emit('edit', row)">
-                  <img :src="EditIcon" alt="Edit Icon" class="w-7 h-auto" />
+                  <img :src="EditIcon" alt="Edit Icon" class="w-7 min-w-[28px] h-auto" />
                 </button>
                 <button @click="$emit('delete', row)">
-                  <img :src="DeleteIcon" alt="Delete Icon" class="w-7 h-auto" />
+                  <img :src="DeleteIcon" alt="Delete Icon" class="w-7 min-w-[28px] h-auto" />
                 </button>
               </div>
             </td>
