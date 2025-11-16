@@ -11,18 +11,16 @@
     class="shadow-lg mb-6"
   />
 
-  <!-- Table with merged header -->
-  <div class="relative w-full">
-    <div class="overflow-x-auto w-full">
-      <DashboardTable
-        :columns="columns"
-        :data="filteredData"
-        :has-actions="true"
-        @edit="handleEdit"
-        @delete="handleDelete"
-        @print="handlePrint"
-      />
-    </div>
+  <!-- Fixed table wrapper -->
+  <div class="table-wrapper">
+    <DashboardTable
+      :columns="columns"
+      :data="filteredData"
+      :has-actions="true"
+      @edit="handleEdit"
+      @delete="handleDelete"
+      @print="handlePrint"
+    />
   </div>
 </template>
 
@@ -169,8 +167,6 @@ const handleReset = () => {
 const handleEdit = (row: any) => {
   console.log('Edit:', row)
   alert(`Edit jadwal: ${row.mataKuliah}`)
-  // Add your edit logic here
-  // Example: router.push({ name: 'EditJadwal', params: { id: row.id } })
 }
 
 const handleDelete = (row: any) => {
@@ -191,10 +187,47 @@ const handlePrint = () => {
 </script>
 
 <style scoped>
-/* Add any custom styles here */
+/* Critical fix for zoom issue */
+.dashboard-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll on container */
+}
+
+.table-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure child components don't overflow */
+.table-wrapper :deep(*) {
+  max-width: 100%;
+}
+
+/* Force table to be responsive */
+.table-wrapper :deep(table) {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: auto;
+}
+
+.table-wrapper :deep(th),
+.table-wrapper :deep(td) {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 200px; /* Adjust based on your needs */
+}
+
 @media print {
   .no-print {
     display: none;
+  }
+
+  .table-wrapper {
+    overflow: visible;
   }
 }
 </style>

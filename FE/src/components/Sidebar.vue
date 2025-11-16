@@ -13,10 +13,10 @@ const toggleMenu = () => (isOpen.value = !isOpen.value)
 
 <template>
   <!-- Desktop Sidebar -->
-  <nav class="hidden xl:flex flex-col bg-white w-72 h-screen font-sans border-r border-gray-200">
+  <nav class="hidden xl:flex flex-col h-full bg-white w-64 font-sans border-r border-gray-200">
     <!-- Logo Section -->
     <div class="mb-2 flex items-center w-full p-4 mt-3">
-      <img :src="logo" alt="Logo" class="h-12 w-auto mr-3 ml-1" />
+      <img :src="logo" alt="Logo" class="h-10 w-auto mr-3 ml-1" />
       <div class="flex flex-col leading-tight">
         <span class="text-active-blue text-xl font-bold">Jadwal Kampus</span>
         <span class="text-xs text-black">Sistem Monitoring</span>
@@ -24,29 +24,44 @@ const toggleMenu = () => (isOpen.value = !isOpen.value)
     </div>
 
     <!-- Sidebar Menu -->
-    <div class="flex flex-col space-y-1 px-4">
-      <a href="/" class="flex items-center gap-3 py-3 px-3 rounded-lg hover:bg-hover-blue">
-        <img :src="DashboardIcon" alt="Dashboard Icon" class="w-5 h-auto" />
+    <div class="flex flex-col space-y-1">
+      <a
+        href="/"
+        class="grid grid-cols-[32px_1fr] items-center gap-3 py-4 px-6 hover:bg-hover-blue"
+      >
+        <img :src="DashboardIcon" class="w-5 mx-auto" />
         <span class="text-md font-medium text-black">Dashboard Jadwal</span>
       </a>
 
-      <a href="/" class="flex items-center gap-3 py-3 px-3 rounded-lg hover:bg-hover-blue">
-        <img :src="AddIcon" alt="Add Icon" class="w-5 h-auto" />
+      <a
+        href="/"
+        class="grid grid-cols-[32px_1fr] items-center gap-3 py-4 px-6 hover:bg-hover-blue"
+      >
+        <img :src="AddIcon" class="w-5 mx-auto" />
         <span class="text-md font-medium text-black">Tambah Jadwal</span>
       </a>
 
-      <a href="/" class="flex items-center gap-3 py-3 px-3 rounded-lg hover:bg-hover-blue">
-        <img :src="ChartIcon" alt="Chart Icon" class="w-5 h-auto" />
+      <a
+        href="/"
+        class="grid grid-cols-[32px_1fr] items-center gap-3 py-4 px-6 hover:bg-hover-blue"
+      >
+        <img :src="ChartIcon" class="w-4 mx-auto" />
         <span class="text-md font-medium text-black">Beban Kerja Dosen</span>
       </a>
 
-      <a href="/" class="flex items-center gap-3 py-3 px-3 rounded-lg hover:bg-hover-blue">
-        <img :src="DoorIcon" alt="Door Icon" class="w-5 h-auto" />
+      <a
+        href="/"
+        class="grid grid-cols-[32px_1fr] items-center gap-3 py-4 px-6 hover:bg-hover-blue"
+      >
+        <img :src="DoorIcon" class="w-4 mx-auto" />
         <span class="text-md font-medium text-black">Beban Ruang Kelas</span>
       </a>
 
-      <a href="/" class="flex items-center gap-3 py-3 px-3 rounded-lg hover:bg-hover-blue">
-        <img :src="MasterDataIcon" alt="Master Data Icon" class="w-5 h-auto" />
+      <a
+        href="/"
+        class="grid grid-cols-[32px_1fr] items-center gap-3 py-4 px-6 hover:bg-hover-blue"
+      >
+        <img :src="MasterDataIcon" class="w-5 mx-auto" />
         <span class="text-md font-medium text-black">Master Data</span>
       </a>
     </div>
