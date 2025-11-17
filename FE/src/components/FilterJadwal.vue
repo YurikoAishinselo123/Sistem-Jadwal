@@ -4,7 +4,7 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <!-- Periode Tahun Ajaran -->
-      <Dropdown
+      <CustomDropdown
         v-model="filters.periodeTahunAjaran"
         :options="options.periodeTahunAjaran"
         placeholder="Periode Tahun Ajaran"
@@ -12,7 +12,7 @@
       />
 
       <!-- Hari -->
-      <Dropdown
+      <CustomDropdown
         v-model="filters.hari"
         :options="options.hari"
         placeholder="Hari"
@@ -20,7 +20,7 @@
       />
 
       <!-- Program Studi -->
-      <Dropdown
+      <CustomDropdown
         v-model="filters.programStudi"
         :options="options.programStudi"
         placeholder="Program Studi"
@@ -28,7 +28,7 @@
       />
 
       <!-- Mata Kuliah -->
-      <Dropdown
+      <CustomDropdown
         v-model="filters.mataKuliah"
         :options="options.mataKuliah"
         placeholder="Mata Kuliah"
@@ -36,7 +36,7 @@
       />
 
       <!-- Dosen -->
-      <Dropdown
+      <CustomDropdown
         v-model="filters.dosen"
         :options="options.dosen"
         placeholder="Dosen"
@@ -44,7 +44,7 @@
       />
 
       <!-- Laboran -->
-      <Dropdown
+      <CustomDropdown
         v-model="filters.laboran"
         :options="options.laboran"
         placeholder="Laboran"
@@ -52,7 +52,7 @@
       />
 
       <!-- Waktu Perkuliahan -->
-      <Dropdown
+      <CustomDropdown
         v-model="filters.waktuPerkuliahan"
         :options="options.waktuPerkuliahan"
         placeholder="Waktu Perkuliahan"
@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { reactive, watch } from 'vue'
-import Dropdown from './Dropdown.vue'
+import CustomDropdown from './CustomDropdown.vue'
 
 // Props declaration
 const props = defineProps<{
