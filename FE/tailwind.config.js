@@ -9,6 +9,7 @@ export default {
         'active-blue': '#00579B',
         'hover-button': '#0071C9',
         'header-table': '#BDE1FD',
+        'green-emerald': '#00A218',
       },
 
       fontFamily: {
