@@ -15,6 +15,7 @@ const router = createRouter({
         { path: '', name: 'dashboard', component: DashboardView },
         { path: 'tambah-jadwal', name: 'tambahJadwal', component: TambahJadwalView },
         { path: 'beban-kerja-dosen', name: 'bebanKerjaDosen', component: BebanKerjaDosenView },
+        { path: 'beban-ruang-kelas', name: 'bebanRuangKelas', component: BebanRuangKelasView },
       ],
     },
   ],
