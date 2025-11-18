@@ -25,13 +25,13 @@
             <th
               v-for="column in columns"
               :key="column.key"
-              class="px-4 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider"
+              class="px-4 py-4 text-left text-xs font-semibold text-black uppercase tracking-wider"
             >
               {{ column.label }}
             </th>
             <th
               v-if="hasActions"
-              class="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider"
+              class="px-6 py-3 text-center text-xs font-semibold text-black uppercase tracking-wider"
             >
               Aksi
             </th>

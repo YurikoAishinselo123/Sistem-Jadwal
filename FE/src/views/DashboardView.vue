@@ -12,7 +12,7 @@
   />
 
   <!-- Fixed table wrapper -->
-  <div class="table-wrapper">
+  <div class="table-wrapper shadow-lg">
     <DashboardTable
       :columns="columns"
       :data="filteredData"
@@ -28,7 +28,6 @@
 import { ref, computed } from 'vue'
 import FilterJadwal from '@/components/FilterJadwal.vue'
 import type { IFilterDashboard } from '@/interfaces/IFilterDashboard'
-import PrintIcon from '../assets/image/Print_icon.svg'
 import DashboardTable from '../components/DashboardTable.vue'
 
 // Define columns for the table
