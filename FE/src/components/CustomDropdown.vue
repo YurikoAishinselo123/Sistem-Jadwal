@@ -2,6 +2,7 @@
   <div class="relative" ref="dropdownRef">
     <label v-if="label" class="block text-sm font-medium text-gray-700 mb-2">
       {{ label }}
+      <span v-if="required" class="text-red-600 font-bold">*</span>
     </label>
 
     <!-- Searchable Input -->
@@ -66,7 +67,7 @@
     >
       <!-- 🆕 NEW: Clear Option -->
       <button
-        v-if="modelValue && allowClear"
+        v-if="modelValue && clearable"
         @click="clearSelection"
         type="button"
         class="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors text-red-600 font-medium border-b border-gray-200 flex items-center gap-2"
@@ -120,13 +121,17 @@ const props = defineProps({
     default: '',
   },
   // 🆕 NEW PROPS
-  allowClear: {
+  clearable: {
     type: Boolean,
     default: true,
   },
   clearText: {
     type: String,
     default: 'Kosongkan pilihan',
+  },
+  required: {
+    type: Boolean,
+    default: false,
   },
 })
 
