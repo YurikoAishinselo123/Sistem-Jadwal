@@ -6,6 +6,7 @@ use App\Models\Jadwal;
 use App\Http\Requests\StoreJadwalRequest;
 use App\Http\Requests\UpdateJadwalRequest;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Validator;
 
 class JadwalController extends Controller
 {
@@ -20,20 +21,9 @@ class JadwalController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreJadwalRequest $request)
     {
-        $fields=$request->validate([
-            'hari_jadwal' => 'required',
-            'waktu_mulai'=> 'required',
-            'sesi'=> 'required',
-            'tahun_ajaran'=> 'required',
-            'id_prodi'=> 'required',
-            'id_makul'=> 'required',
-            'id_dosen'=> 'required',
-            'id_laboran'=> 'required',
-            'id_ruangan'=> 'required'            
-        ]);//
-
+        $fields=$request->validated();
         $jadwal = Jadwal::create($fields);
         return ['jadwal' => $jadwal];
     }
