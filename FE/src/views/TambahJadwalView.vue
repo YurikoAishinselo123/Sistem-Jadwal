@@ -18,6 +18,8 @@
           placeholder="Pilih periode tahun ajaran"
           label="Periode Tahun Ajaran"
           :searchable="false"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Hari -->
@@ -27,6 +29,8 @@
           placeholder="Pilih hari"
           label="Hari"
           :searchable="true"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Jenis Jadwal -->
@@ -36,6 +40,8 @@
           placeholder="Pilih jenis jadwal"
           label="Jenis Jadwal"
           :searchable="false"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Waktu Perkuliahan -->
@@ -45,6 +51,8 @@
           placeholder="Pilih waktu perkuliahan"
           label="Waktu Perkuliahan"
           :searchable="true"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Mata Kuliah -->
@@ -54,6 +62,8 @@
           placeholder="Pilih mata kuliah"
           label="Mata Kuliah"
           :searchable="true"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Jenis Mata Kuliah -->
@@ -63,6 +73,8 @@
           placeholder="Pilih jenis mata kuliah"
           label="Jenis Mata Kuliah"
           :searchable="true"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Program Studi -->
@@ -72,6 +84,8 @@
           placeholder="Pilih program studi"
           label="Program Studi"
           :searchable="true"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Kelas -->
@@ -81,6 +95,8 @@
           placeholder="Pilih kelas"
           label="Kelas"
           :searchable="true"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Dosen 1 -->
@@ -90,6 +106,8 @@
           placeholder="Pilih dosen 1"
           label="Dosen 1"
           :searchable="true"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Dosen 2 -->
@@ -99,6 +117,8 @@
           placeholder="Pilih dosen 2"
           label="Dosen 2"
           :searchable="true"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Laboran -->
@@ -108,6 +128,8 @@
           placeholder="Pilih laboran"
           label="Laboran"
           :searchable="true"
+          :clearable="false"
+          :required="true"
         />
 
         <!-- Ruang Kelas -->
@@ -117,6 +139,7 @@
           placeholder="Pilih ruang kelas"
           label="Ruang Kelas"
           :searchable="true"
+          :clearable="true"
         />
       </div>
 
@@ -166,7 +189,7 @@ const formData = reactive({
 const dropdownOptions = {
   periodeTahunAjaran: ['Gasal 2024', 'Genap 2024', 'Gasal 2025', 'Genap 2025'],
   hari: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
-  jenisJadwal: ['Teori', 'Praktikum', 'Seminar', 'Workshop'],
+  jenisJadwal: ['Jadwal Semester', 'Jadwal Ujian', 'Jadwal Pengganti'],
   waktuPerkuliahan: ['07:00 - 09:30', '09:30 - 12:00', '13:00 - 15:30', '15:30 - 18:00'],
   mataKuliah: [
     'Algoritma',
@@ -175,7 +198,7 @@ const dropdownOptions = {
     'Basis Data',
     'Sistem Operasi',
   ],
-  jenisMataKuliah: ['Wajib', 'Pilihan', 'MKU', 'MKDU'],
+  jenisMataKuliah: ['Online', 'Offline'],
   programStudi: ['Teknik Informatika', 'Mesin A', 'Mesin B', 'Teknik Elektro'],
   kelas: ['A', 'B', 'C', 'D', 'E'],
   dosen: [
