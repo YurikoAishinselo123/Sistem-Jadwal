@@ -44,16 +44,30 @@
           :required="true"
         />
 
-        <!-- Waktu Perkuliahan -->
-        <CustomDropdown
-          v-model="formData.waktuPerkuliahan"
-          :options="dropdownOptions.waktuPerkuliahan"
-          placeholder="Pilih waktu perkuliahan"
-          label="Waktu Perkuliahan"
-          :searchable="true"
-          :clearable="false"
-          :required="true"
-        />
+        <!-- Time Selection Row - Waktu Mulai and Waktu Selesai -->
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Waktu Mulai Perkuliahan -->
+          <CustomDropdown
+            v-model="formData.waktuMulai"
+            :options="availableStartTimes"
+            placeholder="Pilih waktu mulai"
+            label="Waktu Mulai Perkuliahan"
+            :searchable="true"
+            :clearable="false"
+            :required="true"
+          />
+
+          <!-- Waktu Selesai Perkuliahan -->
+          <CustomDropdown
+            v-model="formData.waktuSelesai"
+            :options="availableEndTimes"
+            placeholder="Pilih waktu selesai"
+            label="Waktu Selesai Perkuliahan"
+            :searchable="true"
+            :clearable="false"
+            :required="true"
+          />
+        </div>
 
         <!-- Mata Kuliah -->
         <CustomDropdown
@@ -66,12 +80,12 @@
           :required="true"
         />
 
-        <!-- Jenis Mata Kuliah -->
+        <!-- Status -->
         <CustomDropdown
-          v-model="formData.jenisMataKuliah"
-          :options="dropdownOptions.jenisMataKuliah"
-          placeholder="Pilih jenis mata kuliah"
-          label="Jenis Mata Kuliah"
+          v-model="formData.status"
+          :options="dropdownOptions.status"
+          placeholder="Pilih Status"
+          label="Status"
           :searchable="true"
           :clearable="false"
           :required="true"
@@ -147,6 +161,7 @@
       <div class="flex justify-end gap-4 mt-8">
         <button
           @click="handleCancel"
+          type="button"
           class="px-8 py-2 font-semibold border-2 border-active-blue text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
         >
           Batal
@@ -163,20 +178,43 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import CustomDropdown from '@/components/CustomDropdown.vue'
 
 const router = useRouter()
+
+// Time slots definition
+const timeSlots = {
+  pagi: [
+    '07:50',
+    '08:40',
+    '09:30',
+    '10:20',
+    '11:10',
+    '12:00',
+    '12:50',
+    '13:40',
+    '14:30',
+    '15:20',
+    '16:10',
+    '17:00',
+  ],
+  malam: ['17:10', '18:00', '19:00', '19:35', '20:10', '20:45', '21:20', '21:55', '22:30', '23:05'],
+}
+
+// All time slots combined
+const allTimeSlots = [...timeSlots.pagi, ...timeSlots.malam]
 
 // Form data
 const formData = reactive({
   periodeTahunAjaran: '',
   hari: '',
   jenisJadwal: '',
-  waktuPerkuliahan: '',
+  waktuMulai: '',
+  waktuSelesai: '',
   mataKuliah: '',
-  jenisMataKuliah: '',
+  status: '',
   programStudi: '',
   kelas: '',
   dosen1: '',
@@ -185,12 +223,55 @@ const formData = reactive({
   ruangKelas: '',
 })
 
+// Determine which session (pagi/malam) based on selected start time
+const selectedSession = computed(() => {
+  if (!formData.waktuMulai) return null
+  if (timeSlots.pagi.includes(formData.waktuMulai)) return 'pagi'
+  if (timeSlots.malam.includes(formData.waktuMulai)) return 'malam'
+  return null
+})
+
+// Available start times (all times)
+const availableStartTimes = computed(() => {
+  return allTimeSlots
+})
+
+// Available end times based on selected start time
+const availableEndTimes = computed(() => {
+  if (!formData.waktuMulai) return allTimeSlots
+
+  const session = selectedSession.value
+  if (!session) return []
+
+  // Get the appropriate session times
+  const sessionTimes = timeSlots[session]
+
+  // Find the index of selected start time
+  const startIndex = sessionTimes.indexOf(formData.waktuMulai)
+
+  // Return only times after the start time in the same session
+  return sessionTimes.slice(startIndex + 1)
+})
+
+// Watch for changes in waktuMulai to reset waktuSelesai if needed
+watch(
+  () => formData.waktuMulai,
+  (newStartTime) => {
+    // If start time changes, check if end time is still valid
+    if (formData.waktuSelesai) {
+      const validEndTimes = availableEndTimes.value
+      if (!validEndTimes.includes(formData.waktuSelesai)) {
+        formData.waktuSelesai = ''
+      }
+    }
+  },
+)
+
 // Dropdown options
 const dropdownOptions = {
   periodeTahunAjaran: ['Gasal 2024', 'Genap 2024', 'Gasal 2025', 'Genap 2025'],
   hari: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
   jenisJadwal: ['Jadwal Semester', 'Jadwal Ujian', 'Jadwal Pengganti'],
-  waktuPerkuliahan: ['07:00 - 09:30', '09:30 - 12:00', '13:00 - 15:30', '15:30 - 18:00'],
   mataKuliah: [
     'Algoritma',
     'Pemrograman',
@@ -198,7 +279,7 @@ const dropdownOptions = {
     'Basis Data',
     'Sistem Operasi',
   ],
-  jenisMataKuliah: ['Online', 'Offline'],
+  status: ['Online', 'Offline'],
   programStudi: ['Teknik Informatika', 'Mesin A', 'Mesin B', 'Teknik Elektro'],
   kelas: ['A', 'B', 'C', 'D', 'E'],
   dosen: [
@@ -217,12 +298,16 @@ const handleSubmit = () => {
   const requiredFields = [
     'periodeTahunAjaran',
     'hari',
-    'waktuPerkuliahan',
+    'jenisJadwal',
+    'waktuMulai',
+    'waktuSelesai',
     'mataKuliah',
+    'status',
     'programStudi',
     'kelas',
     'dosen1',
-    'ruangKelas',
+    'dosen2',
+    'laboran',
   ]
 
   const missingFields = requiredFields.filter((field) => !formData[field as keyof typeof formData])
@@ -232,24 +317,36 @@ const handleSubmit = () => {
     return
   }
 
+  // Validate time selection
+  if (!availableEndTimes.value.includes(formData.waktuSelesai)) {
+    alert(
+      'Waktu selesai tidak valid! Pastikan waktu selesai lebih besar dari waktu mulai dan dalam sesi yang sama.',
+    )
+    return
+  }
+
   // Create new schedule object
   const newSchedule = {
     hari: formData.hari,
-    kodeMakul: 'AUTO-GENERATED', // You might want to generate this
+    kodeMakul: 'AUTO-GENERATED',
     programStudi: formData.programStudi,
     mataKuliah: formData.mataKuliah,
+    status: formData.status,
+    jenisJadwal: formData.jenisJadwal,
     dosen1: formData.dosen1,
     dosen2: formData.dosen2,
     laboran: formData.laboran,
     ruang: formData.ruangKelas,
-    waktu: formData.waktuPerkuliahan,
+    waktuMulai: formData.waktuMulai,
+    waktuSelesai: formData.waktuSelesai,
+    waktuPerkuliahan: `${formData.waktuMulai} - ${formData.waktuSelesai}`,
+    sesi: selectedSession.value,
     periodeTahunAjaran: formData.periodeTahunAjaran,
   }
 
   console.log('New schedule:', newSchedule)
 
   // Here you would typically send this to your backend API
-  // For now, just show success message
   alert('Jadwal berhasil ditambahkan!')
 
   // Navigate back to dashboard
