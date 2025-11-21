@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-row w-screen">
+  <div class="flex flex-row min-w-screen">
     <aside class="shadow-lg min-h-screen">
       <Sidebar />
     </aside>

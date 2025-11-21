@@ -1,9 +1,6 @@
 <template>
-  <div class="mb-8 mt-12 sm:mt-10 xl:mt-0">
-    <p class="text-xl sm:text-3xl font-bold text-black">Dashboard Jadwal Perkuliahan</p>
-    <p class="text-sm sm:text-lg font-base text-black">Monitor dan kelola perkuliahan kampus</p>
-  </div>
-
+  <p class="text-4xl font-bold text-black">Dashboard Jadwal Perkuliahan</p>
+  <p class="text-xl font-base text-black mb-8">Monitor dan kelola perkuliahan kampus</p>
   <FilterJadwal
     :options="filterOptions"
     @filter-change="handleFilterChange"
@@ -11,17 +8,16 @@
     class="shadow-lg mb-6"
   />
 
-  <!-- Fixed table wrapper -->
-  <div class="table-wrapper shadow-lg">
-    <DashboardTable
-      :columns="columns"
-      :data="filteredData"
-      :has-actions="true"
-      @edit="handleEdit"
-      @delete="handleDelete"
-      @print="handlePrint"
-    />
-  </div>
+  <!-- Table with merged header -->
+  <DashboardTable
+    :columns="columns"
+    :data="filteredData"
+    :has-actions="true"
+    @edit="handleEdit"
+    @delete="handleDelete"
+    @print="handlePrint"
+  >
+  </DashboardTable>
 </template>
 
 <script lang="ts" setup>
@@ -33,12 +29,12 @@ import DashboardTable from '../components/DashboardTable.vue'
 // Define columns for the table
 const columns = ref([
   { key: 'hari', label: 'Hari' },
-  { key: 'kodeMakul', label: 'Kode Makul' },
   { key: 'programStudi', label: 'Program Studi' },
   { key: 'mataKuliah', label: 'Mata Kuliah' },
   { key: 'dosen', label: 'Dosen' },
   { key: 'laboran', label: 'Laboran' },
   { key: 'ruang', label: 'Ruang' },
+  { key: 'status', label: 'status' },
   { key: 'waktu', label: 'Waktu' },
 ])
 
@@ -55,6 +51,7 @@ const jadwalData = ref([
     ruang: '108 B',
     waktu: '07:00 - 09:30',
     periodeTahunAjaran: 'Gasal 2025',
+    status: 'online',
   },
   {
     hari: 'Senin',
@@ -67,6 +64,7 @@ const jadwalData = ref([
     ruang: '201 A',
     waktu: '09:30 - 12:00',
     periodeTahunAjaran: 'Gasal 2025',
+    status: 'offline',
   },
   {
     hari: 'Selasa',
@@ -79,6 +77,7 @@ const jadwalData = ref([
     ruang: '202 B',
     waktu: '13:00 - 15:30',
     periodeTahunAjaran: 'Gasal 2025',
+    status: 'online',
   },
   {
     hari: 'Rabu',
@@ -91,6 +90,7 @@ const jadwalData = ref([
     ruang: '108 C',
     waktu: '07:00 - 09:30',
     periodeTahunAjaran: 'Genap 2025',
+    status: 'offline',
   },
   {
     hari: 'Kamis',
@@ -103,6 +103,7 @@ const jadwalData = ref([
     ruang: '301 A',
     waktu: '09:30 - 12:00',
     periodeTahunAjaran: 'Gasal 2025',
+    status: 'online',
   },
 ])
 
@@ -166,6 +167,8 @@ const handleReset = () => {
 const handleEdit = (row: any) => {
   console.log('Edit:', row)
   alert(`Edit jadwal: ${row.mataKuliah}`)
+  // Add your edit logic here
+  // Example: router.push({ name: 'EditJadwal', params: { id: row.id } })
 }
 
 const handleDelete = (row: any) => {
@@ -186,47 +189,10 @@ const handlePrint = () => {
 </script>
 
 <style scoped>
-/* Critical fix for zoom issue */
-.dashboard-container {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden; /* Prevent horizontal scroll on container */
-}
-
-.table-wrapper {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Ensure child components don't overflow */
-.table-wrapper :deep(*) {
-  max-width: 100%;
-}
-
-/* Force table to be responsive */
-.table-wrapper :deep(table) {
-  width: 100% !important;
-  max-width: 100% !important;
-  table-layout: auto;
-}
-
-.table-wrapper :deep(th),
-.table-wrapper :deep(td) {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  max-width: 200px; /* Adjust based on your needs */
-}
-
+/* Add any custom styles here */
 @media print {
   .no-print {
     display: none;
-  }
-
-  .table-wrapper {
-    overflow: visible;
   }
 }
 </style>

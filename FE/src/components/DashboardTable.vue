@@ -23,17 +23,19 @@
         <thead class="bg-header-table">
           <tr>
             <th
+              v-if="hasActions"
+              class="py-3 text-center text-xs font-semibold text-black uppercase tracking-wider"
+            ></th>
+
+            <th
               v-for="column in columns"
               :key="column.key"
               class="px-4 py-4 text-left text-xs font-semibold text-black uppercase tracking-wider"
+              :class="{
+                'text-center': ['ruang', 'status'].includes(column.key),
+              }"
             >
               {{ column.label }}
-            </th>
-            <th
-              v-if="hasActions"
-              class="px-6 py-3 text-center text-xs font-semibold text-black uppercase tracking-wider"
-            >
-              Aksi
             </th>
           </tr>
         </thead>
@@ -41,13 +43,67 @@
         <!-- Table Body -->
         <tbody class="bg-white divide-y divide-gray-200 text-gray-800">
           <tr v-for="(row, rowIndex) in data" :key="rowIndex">
-            <td v-for="column in columns" :key="column.key" class="px-4 py-4 text-xs align-middle">
-              <!-- Mata Kuliah: break line after 2nd word -->
+            <!-- Actions -->
+            <td v-if="hasActions" class="py-2 px-1 text-center relative">
+              <div class="flex items-center justify-center">
+                <button
+                  @click="toggleMenu(rowIndex)"
+                  class="p-2 hover:bg-gray-100 rounded-full transition-colors action-button"
+                  type="button"
+                >
+                  <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 16 16">
+                    <circle cx="8" cy="2" r="1.5" />
+                    <circle cx="8" cy="8" r="1.5" />
+                    <circle cx="8" cy="14" r="1.5" />
+                  </svg>
+                </button>
+
+                <!-- Popup Menu -->
+                <div
+                  v-if="activeMenu === rowIndex"
+                  class="absolute top-1/2 -translate-y-1/2 left-full bg-white rounded-xl shadow-xl border border-gray-200 z-50 action-menu min-w-[120px]"
+                >
+                  <button
+                    @click=""
+                    class="w-full px-4 py-3 flex items-center gap-4 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors whitespace-nowrap rounded-t-xl"
+                  >
+                    <Detail_icon class="w-5 h-5" />
+                    <span>Detail</span>
+                  </button>
+
+                  <button
+                    @click="handleEdit(row, rowIndex)"
+                    class="w-full px-4 py-3 flex items-center gap-4 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                  >
+                    <Edit_icon class="w-5 h-5" />
+                    <span>Edit</span>
+                  </button>
+
+                  <button
+                    @click="handleDelete(row, rowIndex)"
+                    class="w-full px-4 py-3 flex items-center gap-4 text-left text-sm text-red-600 hover:bg-red-50 transition-colors whitespace-nowrap rounded-b-xl"
+                  >
+                    <Delete_icon class="w-5 h-5" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </div>
+            </td>
+
+            <td
+              v-for="column in columns"
+              :key="column.key"
+              class="px-4 py-4 text-xs align-middle"
+              :class="{
+                'text-center': ['ruang', 'status'].includes(column.key),
+              }"
+            >
+              <!-- Mata Kuliah: break line -->
               <template v-if="column.key === 'mataKuliah'">
                 <span v-html="formatMataKuliah(row[column.key])"></span>
               </template>
 
-              <!-- Dosen: shorten but keep degrees -->
+              <!-- Dosen -->
               <template v-else-if="column.key === 'dosen'">
                 <div class="flex flex-col">
                   <span>{{ formatDosen(row.dosen1 || row.dosen) }}</span>
@@ -55,22 +111,10 @@
                 </div>
               </template>
 
-              <!-- Default render -->
+              <!-- Default -->
               <template v-else>
                 {{ row[column.key] }}
               </template>
-            </td>
-
-            <!-- Actions -->
-            <td v-if="hasActions" class="px-6 py-4 text-center">
-              <div class="flex items-center justify-center gap-3">
-                <button @click="$emit('edit', row)">
-                  <img :src="EditIcon" alt="Edit Icon" class="w-7 min-w-[28px] h-auto" />
-                </button>
-                <button @click="$emit('delete', row)">
-                  <img :src="DeleteIcon" alt="Delete Icon" class="w-7 min-w-[28px] h-auto" />
-                </button>
-              </div>
             </td>
           </tr>
 
@@ -91,33 +135,55 @@
 
 <script setup>
 import PrintIcon from '@/assets/image/Print_icon.svg'
-import EditIcon from '@/assets/image/Edit_icon.svg'
-import DeleteIcon from '@/assets/image/Delete_icon.svg'
-
-import { defineProps, defineEmits } from 'vue'
+import Edit_icon from '@/assets/icons/Edit_icon.vue'
+import Delete_icon from '@/assets/icons/Delete_icon.vue'
+import Detail_icon from '@/assets/icons/Detail_icon.vue'
+import { defineProps, defineEmits, ref, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
-  columns: {
-    type: Array,
-    required: true,
-  },
-  data: {
-    type: Array,
-    required: true,
-  },
-  hasActions: {
-    type: Boolean,
-    default: false,
-  },
+  columns: Array,
+  data: Array,
+  hasActions: Boolean,
   emptyMessage: {
     type: String,
     default: 'Tidak ada data',
   },
 })
 
-defineEmits(['edit', 'delete', 'print'])
+const emit = defineEmits(['edit', 'delete', 'print'])
 
-// 🔹 Break line after 2nd word for Mata Kuliah
+const activeMenu = ref(null)
+
+const toggleMenu = (rowIndex) => {
+  activeMenu.value = activeMenu.value === rowIndex ? null : rowIndex
+}
+
+const handleEdit = (row) => {
+  emit('edit', row)
+  activeMenu.value = null
+}
+
+const handleDelete = (row) => {
+  emit('delete', row)
+  activeMenu.value = null
+}
+
+const handleClickOutside = (event) => {
+  const menus = document.querySelectorAll('.action-menu')
+  let clickedInside = false
+
+  menus.forEach((menu) => {
+    if (menu.contains(event.target)) clickedInside = true
+  })
+
+  if (!clickedInside && !event.target.closest('.action-button')) {
+    activeMenu.value = null
+  }
+}
+
+onMounted(() => document.addEventListener('click', handleClickOutside))
+onUnmounted(() => document.removeEventListener('click', handleClickOutside))
+
 const formatMataKuliah = (text) => {
   if (!text) return ''
   const words = text.split(' ')
@@ -125,20 +191,12 @@ const formatMataKuliah = (text) => {
   return `${words.slice(0, 2).join(' ')}<br>${words.slice(2).join(' ')}`
 }
 
-// 🔹 Shorten Dosen name but keep degrees
 const formatDosen = (name) => {
   if (!name) return ''
-
-  // Split by comma to separate name and degree
   const [mainName, ...degrees] = name.split(',')
   const words = mainName.trim().split(/\s+/)
-
   if (words.length <= 2) return name
-
-  // Keep first 2 words + first letter of 3rd (if exists)
   const shortened = `${words[0]} ${words[1]} ${words[2] ? words[2][0] + '.' : ''}`
-  const degreePart = degrees.length > 0 ? `,${degrees.join(',')}` : ''
-
-  return shortened + degreePart
+  return shortened + (degrees.length > 0 ? `,${degrees.join(',')}` : '')
 }
 </script>

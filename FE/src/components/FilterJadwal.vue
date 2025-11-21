@@ -39,7 +39,7 @@
       <CustomDropdown
         v-model="filters.dosen"
         :options="options.dosen"
-        placeholder="Dosen"
+        placeholder="Jenis Jadwal"
         :searchable="true"
       />
 
