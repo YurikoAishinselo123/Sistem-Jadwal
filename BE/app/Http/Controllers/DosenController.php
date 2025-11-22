@@ -6,9 +6,16 @@ use App\Models\Dosen;
 use App\Http\Requests\StoreDosenRequest;
 use App\Http\Requests\UpdateDosenRequest;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class DosenController extends Controller
+class DosenController extends Controller implements HasMiddleware
 {
+    public static function middleware(){
+        return[
+            new Middleware('auth:sanctum', except:['index', 'show'])
+        ];
+    }    
     /**
      * Display a listing of the resource.
      */

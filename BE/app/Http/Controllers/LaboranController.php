@@ -6,9 +6,16 @@ use App\Models\Laboran;
 use App\Http\Requests\StoreLaboranRequest;
 use App\Http\Requests\UpdateLaboranRequest;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class LaboranController extends Controller
+class LaboranController extends Controller implements HasMiddleware
 {
+    public static function middleware(){
+        return[
+            new Middleware('auth:sanctum', except:['index', 'show'])
+        ];
+    }    
     /**
      * Display a listing of the resource.
      */

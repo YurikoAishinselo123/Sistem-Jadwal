@@ -6,8 +6,16 @@ use App\Models\Prodi;
 use App\Http\Requests\StoreProdiRequest;
 use App\Http\Requests\UpdateProdiRequest;
 use Illuminate\Http\Request;
-class ProdiController extends Controller
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
+
+class ProdiController extends Controller implements HasMiddleware
 {
+    public static function middleware(){
+        return[
+            new Middleware('auth:sanctum', except:['index', 'show'])
+        ];
+    }   
     /**
      * Display a listing of the resource.
      */

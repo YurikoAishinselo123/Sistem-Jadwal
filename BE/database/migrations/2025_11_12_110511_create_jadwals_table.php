@@ -17,11 +17,11 @@ return new class extends Migration
             $table->time('waktu_mulai');
             $table->string('sesi');
             $table->year('tahun_ajaran');
-            $table->foreignId('id_prodi');
-            $table->foreignId('id_makul');
-            $table->foreignId('id_dosen');
-            $table->foreignId('id_laboran');
-            $table->foreignId('id_ruangan');
+            $table->foreignId('id_prodi')->constrained();
+            $table->foreignId('id_makul')->constrained();
+            $table->foreignId('id_dosen')->constrained();
+            $table->foreignId('id_laboran')->constrained();
+            $table->foreignId('id_ruangan')->constrained();
             $table->timestamps();
         });
     }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\LaboranController;
@@ -19,3 +20,7 @@ Route::apiResource('laboran', LaboranController::class);
 Route::apiResource('makul', MakulController::class);
 Route::apiResource('prodi', ProdiController::class);
 Route::apiResource('ruangan', RuanganController::class);
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');

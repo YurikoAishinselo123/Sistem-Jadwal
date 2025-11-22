@@ -6,10 +6,17 @@ use App\Models\Jadwal;
 use App\Http\Requests\StoreJadwalRequest;
 use App\Http\Requests\UpdateJadwalRequest;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Validation\Validator;
 
-class JadwalController extends Controller
+class JadwalController extends Controller implements HasMiddleware
 {
+    public static function middleware(){
+        return[
+            new Middleware('auth:sanctum', except:['index', 'show'])
+        ];
+    }
     /**
      * Display a listing of the resource.
      */
@@ -39,19 +46,9 @@ class JadwalController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Jadwal $jadwal)
+    public function update(UpdateJadwalRequest $request, Jadwal $jadwal)
     {
-        $fields = $request->validate(([
-            'hari_jadwal' => 'required',
-            'waktu_mulai'=> 'required',
-            'sesi'=> 'required',
-            'tahun_ajaran'=> 'required',
-            'id_prodi'=> 'required',
-            'id_makul'=> 'required',
-            'id_dosen'=> 'required',
-            'id_laboran'=> 'required',
-            'id_ruangan'=> 'required'    
-        ]));
+        $fields = $request->validated();
         $jadwal->update(($fields));
         return ['jadwal' => $jadwal];
         //

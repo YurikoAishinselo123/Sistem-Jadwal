@@ -6,9 +6,16 @@ use App\Models\Makul;
 use App\Http\Requests\StoreMakulRequest;
 use App\Http\Requests\UpdateMakulRequest;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class MakulController extends Controller
+class MakulController extends Controller implements HasMiddleware
 {
+    public static function middleware(){
+        return[
+            new Middleware('auth:sanctum', except:['index', 'show'])
+        ];
+    }   
     /**
      * Display a listing of the resource.
      */
