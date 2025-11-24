@@ -52,6 +52,7 @@ const jadwalData = ref([
     waktu: '07:00 - 09:30',
     periodeTahunAjaran: 'Gasal 2025',
     status: 'online',
+    jenisJadwal: 'Jadwal Semester',
   },
   {
     hari: 'Senin',
@@ -65,6 +66,7 @@ const jadwalData = ref([
     waktu: '09:30 - 12:00',
     periodeTahunAjaran: 'Gasal 2025',
     status: 'offline',
+    jenisJadwal: 'Jadwal Pengganti',
   },
   {
     hari: 'Selasa',
@@ -78,6 +80,7 @@ const jadwalData = ref([
     waktu: '13:00 - 15:30',
     periodeTahunAjaran: 'Gasal 2025',
     status: 'online',
+    jenisJadwal: 'Jadwal Semester',
   },
   {
     hari: 'Rabu',
@@ -91,6 +94,7 @@ const jadwalData = ref([
     waktu: '07:00 - 09:30',
     periodeTahunAjaran: 'Genap 2025',
     status: 'offline',
+    jenisJadwal: 'Jadwal Ujian',
   },
   {
     hari: 'Kamis',
@@ -104,6 +108,7 @@ const jadwalData = ref([
     waktu: '09:30 - 12:00',
     periodeTahunAjaran: 'Gasal 2025',
     status: 'online',
+    jenisJadwal: 'Jadwal Semester',
   },
 ])
 
@@ -113,7 +118,7 @@ const activeFilters = ref<IFilterDashboard>({
   hari: '',
   programStudi: '',
   mataKuliah: '',
-  dosen: '',
+  jenisJadwal: '',
   laboran: '',
   waktuPerkuliahan: '',
 })
@@ -124,7 +129,7 @@ const filterOptions = {
   hari: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
   programStudi: ['Teknik Informatika', 'Mesin A', 'Mesin B'],
   mataKuliah: ['Algoritma', 'Pemrograman', 'Pengantar Teknik Perkapalan'],
-  dosen: ['Adhe Aryswan, S.Pd., M.Si.', 'Haposan Vincentius Manalu, S.T., M.Sc.'],
+  jenisJadwal: ['Jadwal Semester', 'Jadwal Pengganti', 'Jadwal Ujian'],
   laboran: ['Adhe Aryswan, S.Pd., M.Si.', 'Haposan Vincentius Manalu, S.T., M.Sc.'],
   waktuPerkuliahan: ['07:00 - 09:30', '09:30 - 12:00', '13:00 - 15:30'],
 }
@@ -132,15 +137,21 @@ const filterOptions = {
 // Computed filtered data
 const filteredData = computed(() => {
   let result = jadwalData.value
-
   const f = activeFilters.value
+
   if (f.periodeTahunAjaran)
     result = result.filter((i) => i.periodeTahunAjaran === f.periodeTahunAjaran)
+
   if (f.hari) result = result.filter((i) => i.hari === f.hari)
+
   if (f.programStudi) result = result.filter((i) => i.programStudi === f.programStudi)
+
   if (f.mataKuliah) result = result.filter((i) => i.mataKuliah === f.mataKuliah)
-  if (f.dosen) result = result.filter((i) => i.dosen1 === f.dosen || i.dosen2 === f.dosen)
+
+  if (f.jenisJadwal) result = result.filter((i) => i.jenisJadwal === f.jenisJadwal) // 👈 UPDATED
+
   if (f.laboran) result = result.filter((i) => i.laboran === f.laboran)
+
   if (f.waktuPerkuliahan) result = result.filter((i) => i.waktu === f.waktuPerkuliahan)
 
   return result
@@ -152,13 +163,12 @@ const handleFilterChange = (filters: IFilterDashboard) => {
 }
 
 const handleReset = () => {
-  console.log('Filters reset')
   activeFilters.value = {
     periodeTahunAjaran: '',
     hari: '',
     programStudi: '',
     mataKuliah: '',
-    dosen: '',
+    jenisJadwal: '', // 👈 FIXED
     laboran: '',
     waktuPerkuliahan: '',
   }

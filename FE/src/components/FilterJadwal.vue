@@ -37,8 +37,8 @@
 
       <!-- Dosen -->
       <CustomDropdown
-        v-model="filters.dosen"
-        :options="options.dosen"
+        v-model="filters.jenisJadwal"
+        :options="options.jenisJadwal"
         placeholder="Jenis Jadwal"
         :searchable="true"
       />
@@ -81,7 +81,7 @@ const props = defineProps<{
     hari: string[]
     programStudi: string[]
     mataKuliah: string[]
-    dosen: string[]
+    jenisJadwal: string[]
     laboran: string[]
     waktuPerkuliahan: string[]
   }
@@ -93,7 +93,7 @@ interface Filters {
   hari: string
   programStudi: string
   mataKuliah: string
-  dosen: string
+  jenisJadwal: string
   laboran: string
   waktuPerkuliahan: string
 }
@@ -110,7 +110,7 @@ const filters = reactive<Filters>({
   hari: '',
   programStudi: '',
   mataKuliah: '',
-  dosen: '',
+  jenisJadwal: '',
   laboran: '',
   waktuPerkuliahan: '',
 })

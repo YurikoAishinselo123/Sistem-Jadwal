@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 import logo from '../assets/image/Logo.png'
@@ -31,6 +31,15 @@ const goTo = (name: string) => {
   isOpen.value = false // close mobile menu on navigation
   router.push({ name })
 }
+
+// Check if current route is Master Data or any of its children
+const isActiveRoute = (routeName: string) => {
+  if (routeName === 'masterData') {
+    // Check if we're in master data or any of its child routes
+    return route.matched.some((record) => record.name === 'masterData')
+  }
+  return route.name === routeName
+}
 </script>
 
 <template>
@@ -54,7 +63,7 @@ const goTo = (name: string) => {
           @click="goTo(item.routeName)"
           class="h-14 cursor-pointer transition"
           :class="
-            route.name === item.routeName ? 'bg-active-blue text-white' : 'hover:bg-hover-blue'
+            isActiveRoute(item.routeName) ? 'bg-active-blue text-white' : 'hover:bg-hover-blue'
           "
         >
           <!-- INNER CELL WRAPPER for padding -->
@@ -115,7 +124,6 @@ const goTo = (name: string) => {
     </div>
 
     <!-- MOBILE DROPDOWN MENU -->
-    <!-- MOBILE DROPDOWN MENU -->
     <transition name="fade">
       <div v-if="isOpen" class="bg-white shadow-lg border-t border-gray-100 flex flex-col">
         <table class="w-full text-black border-collapse">
@@ -125,7 +133,7 @@ const goTo = (name: string) => {
             @click="goTo(item.routeName)"
             class="cursor-pointer transition"
             :class="
-              route.name === item.routeName ? 'bg-active-blue text-white' : 'hover:bg-hover-blue'
+              isActiveRoute(item.routeName) ? 'bg-active-blue text-white' : 'hover:bg-hover-blue'
             "
           >
             <td colspan="2" class="py-3 px-2">
