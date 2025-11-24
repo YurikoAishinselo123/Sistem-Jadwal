@@ -19,11 +19,17 @@
     </div>
 
     <!-- Workload Summary Card -->
-    <div v-if="selectedDosen" class="bg-green-emerald rounded-xl shadow-lg p-8 mb-6 text-white">
+    <div v-if="selectedDosen" :class="`${cardBgColor} rounded-xl shadow-lg p-8 mb-6 text-white`">
       <div class="flex items-center gap-6">
         <!-- Icon Cell -->
         <div class="bg-white rounded-full p-4 flex items-center justify-center w-16 h-16">
-          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="w-8 h-8"
+            :class="iconColor"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -68,7 +74,20 @@ import CustomDropdown from '@/components/CustomDropdown.vue'
 import DashboardTable from '@/components/DashboardTable.vue'
 import Room_icon from '../assets/image/Room_icon.svg'
 
-// Define columns for the table (matching the image structure)
+// Define schedule interface
+interface ISchedule {
+  hari: string
+  kodeMakul: string
+  programStudi: string
+  mataKuliah: string
+  dosen: string
+  ruang: string
+  waktu: string
+  sks: string
+  sesi: string
+}
+
+// Table columns
 const columns = ref([
   { key: 'hari', label: 'Hari' },
   { key: 'kodeMakul', label: 'Kode Makul' },
@@ -92,52 +111,8 @@ const dosenOptions = [
   'Prof. Siti Rahayu, Ph.D.',
 ]
 
-// Sample schedule data with dosen information
-const scheduleData = ref([
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '108 B',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '108 B',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '108 B',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '108 B',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
+// Sample schedule data
+const scheduleData = ref<ISchedule[]>([
   {
     hari: 'Sabtu',
     kodeMakul: 'FK1KP',
@@ -195,32 +170,36 @@ const scheduleData = ref([
   },
 ])
 
-// Filter schedules by selected dosen
-const filteredSchedules = computed(() => {
-  if (!selectedDosen.value) return []
-  return scheduleData.value.filter((schedule) => schedule.dosen === selectedDosen.value)
+// Filtered schedules by selected dosen
+const filteredSchedules = computed(() =>
+  scheduleData.value.filter((s) => s.dosen === selectedDosen.value),
+)
+
+// Total SKS
+const totalSKS = computed(() =>
+  filteredSchedules.value.reduce((sum, s) => sum + (parseInt(s.sks.replace(' SKS', '')) || 0), 0),
+)
+
+// Total sessions per week
+const totalSesi = computed(() =>
+  filteredSchedules.value.reduce((sum, s) => sum + (parseInt(s.sesi.replace(' Sesi', '')) || 0), 0),
+)
+
+// Dynamic card background color
+const cardBgColor = computed(() => {
+  if (totalSesi.value === 40) return 'bg-[#D00000]' // Bright red
+  if (totalSesi.value > 25) return 'bg-[#D08700]' // Warm yellow
+  return 'bg-green-emerald' // Default green
 })
 
-// Calculate total SKS (extract number from "4 SKS" format)
-const totalSKS = computed(() => {
-  return filteredSchedules.value.reduce((sum, schedule) => {
-    const sksValue = parseInt(schedule.sks.replace(' SKS', '')) || 0
-    return sum + sksValue
-  }, 0)
-})
-
-// Calculate total sessions per week (extract number from "6 Sesi" format)
-const totalSesi = computed(() => {
-  return filteredSchedules.value.reduce((sum, schedule) => {
-    const sesiValue = parseInt(schedule.sesi.replace(' Sesi', '')) || 0
-    return sum + sesiValue
-  }, 0)
+// Optional: icon color based on background
+const iconColor = computed(() => {
+  if (totalSesi.value >= 25) return 'text-white'
+  return 'text-green-600'
 })
 
 // Print handler
-const handlePrint = () => {
-  window.print()
-}
+const handlePrint = () => window.print()
 </script>
 
 <style scoped>
