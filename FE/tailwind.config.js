@@ -10,6 +10,8 @@ export default {
         'hover-button': '#0071C9',
         'header-table': '#BDE1FD',
         'green-emerald': '#00A218',
+        'red-bright': '#D00000',
+        'yellow-warm': '#D08700',
       },
 
       fontFamily: {

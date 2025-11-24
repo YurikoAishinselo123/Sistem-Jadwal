@@ -2,28 +2,34 @@
   <div>
     <!-- Header -->
     <div class="mb-8 mt-12 sm:mt-10 xl:mt-0">
-      <h1 class="text-xl sm:text-3xl font-bold text-black">Beban Ruang Kelas</h1>
-      <p class="text-sm sm:text-lg text-black">Monitor beban ruang kelas per minggu</p>
+      <h1 class="text-xl sm:text-3xl font-bold text-black">Beban Kerja Dosen</h1>
+      <p class="text-sm sm:text-lg text-black">Monitor beban mengajar dosen per minggu</p>
     </div>
 
     <!-- Dosen Selector -->
     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
       <CustomDropdown
-        v-model="selectedRuang"
-        :options="ruangOptions"
-        placeholder="Pilih ruang kelas untuk melihat beban ruang kelas"
-        label="Ruang Kelas"
+        v-model="selectedDosen"
+        :options="dosenOptions"
+        placeholder="Pilih dosen untuk melihat beban kerja dosen"
+        label="Dosen"
         :searchable="true"
         class="max-w-full"
       />
     </div>
 
     <!-- Workload Summary Card -->
-    <div v-if="selectedRuang" class="bg-green-emerald rounded-xl shadow-lg p-8 mb-6 text-white">
+    <div v-if="selectedDosen" :class="`${cardBgColor} rounded-xl shadow-lg p-8 mb-6 text-white`">
       <div class="flex items-center gap-6">
         <!-- Icon Cell -->
         <div class="bg-white rounded-full p-4 flex items-center justify-center w-16 h-16">
-          <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg
+            class="w-8 h-8"
+            :class="iconColor"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -34,8 +40,8 @@
         </div>
 
         <!-- Text Cell -->
-        <div class="flex flex-col justify-center">
-          <h2 class="text-lg font-medium mb-2">Total Beban Ruang {{ selectedDosen }}</h2>
+        <div class="flex flex-col justify-center" :class="textColor">
+          <h2 class="text-lg font-medium mb-2">Total Beban Kerja {{ selectedDosen }}</h2>
           <div class="text-2xl sm:text-3xl font-bold">
             {{ totalSKS }} SKS | {{ totalSesi }} Sesi / Minggu
           </div>
@@ -44,7 +50,7 @@
     </div>
 
     <!-- Schedule Table using DashboardTable Component -->
-    <div v-if="selectedRuang">
+    <div v-if="selectedDosen">
       <DashboardTable
         :columns="columns"
         :data="filteredSchedules"
@@ -68,7 +74,20 @@ import CustomDropdown from '@/components/CustomDropdown.vue'
 import DashboardTable from '@/components/DashboardTable.vue'
 import Room_icon from '../assets/image/Room_icon.svg'
 
-// Define columns for the table (matching the image structure)
+// Schedule interface
+interface ISchedule {
+  hari: string
+  kodeMakul: string
+  programStudi: string
+  mataKuliah: string
+  dosen: string
+  ruang: string
+  waktu: string
+  sks: string
+  sesi: string
+}
+
+// Columns for table
 const columns = ref([
   { key: 'hari', label: 'Hari' },
   { key: 'kodeMakul', label: 'Kode Makul' },
@@ -81,75 +100,26 @@ const columns = ref([
 ])
 
 // Selected dosen
-const selectedRuang = ref('')
+const selectedDosen = ref('')
 
 // Dosen options
-const ruangOptions = ['104', '105', '106', '107', '108']
+const dosenOptions = [
+  'Dr. Suryo, S.Pd, M.Pd',
+  'Adhe Aryswan, S.Pd., M.Si.',
+  'Haposan Vincentius, S.T., M.Sc.',
+  'Dr. Budi Santoso, M.Kom.',
+  'Prof. Siti Rahayu, Ph.D.',
+]
 
-// Sample schedule data with dosen information
-const scheduleData = ref([
+// Sample schedule data
+const scheduleData = ref<ISchedule[]>([
   {
     hari: 'Sabtu',
     kodeMakul: 'FK1KP',
     programStudi: 'Mesin A',
     mataKuliah: 'Pengantar Teknik Perkapalan',
     dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '104',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '105',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '106',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '104',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '108',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '107',
+    ruang: '108 B',
     waktu: '07:00 - 09:30',
     sks: '4 SKS',
     sesi: '6 Sesi',
@@ -160,7 +130,7 @@ const scheduleData = ref([
     programStudi: 'Teknik Informatika',
     mataKuliah: 'Algoritma',
     dosen: 'Adhe Aryswan, S.Pd., M.Si.',
-    ruang: '107',
+    ruang: '201 A',
     waktu: '09:30 - 12:00',
     sks: '3 SKS',
     sesi: '4 Sesi',
@@ -171,7 +141,7 @@ const scheduleData = ref([
     programStudi: 'Teknik Informatika',
     mataKuliah: 'Pemrograman',
     dosen: 'Adhe Aryswan, S.Pd., M.Si.',
-    ruang: '107',
+    ruang: '202 B',
     waktu: '13:00 - 15:30',
     sks: '3 SKS',
     sesi: '4 Sesi',
@@ -182,7 +152,7 @@ const scheduleData = ref([
     programStudi: 'Teknik Informatika',
     mataKuliah: 'Basis Data',
     dosen: 'Haposan Vincentius, S.T., M.Sc.',
-    ruang: '107',
+    ruang: '301 A',
     waktu: '07:00 - 09:30',
     sks: '3 SKS',
     sesi: '4 Sesi',
@@ -193,7 +163,7 @@ const scheduleData = ref([
     programStudi: 'Teknik Informatika',
     mataKuliah: 'Jaringan Komputer',
     dosen: 'Haposan Vincentius, S.T., M.Sc.',
-    ruang: '104s',
+    ruang: '302 B',
     waktu: '13:00 - 15:30',
     sks: '3 SKS',
     sesi: '4 Sesi',
@@ -201,41 +171,55 @@ const scheduleData = ref([
 ])
 
 // Filter schedules by selected dosen
-const filteredSchedules = computed(() => {
-  if (!selectedRuang.value) return []
-  return scheduleData.value.filter((schedule) => schedule.ruang === selectedRuang.value)
+const filteredSchedules = computed(() =>
+  scheduleData.value.filter((schedule) => schedule.dosen === selectedDosen.value),
+)
+
+// Total SKS
+const totalSKS = computed(() =>
+  filteredSchedules.value.reduce(
+    (sum, schedule) => sum + (parseInt(schedule.sks.replace(' SKS', '')) || 0),
+    0,
+  ),
+)
+
+// Total sessions per week
+const totalSesi = computed(() =>
+  filteredSchedules.value.reduce(
+    (sum, schedule) => sum + (parseInt(schedule.sesi.replace(' Sesi', '')) || 0),
+    0,
+  ),
+)
+
+// Dynamic card background color
+const cardBgColor = computed(() => {
+  if (totalSesi.value === 40) return 'bg-[#D00000]' // Bright red
+  if (totalSesi.value > 25) return 'bg-[#D08700]' // Warm yellow
+  return 'bg-green-emerald' // Default green
 })
 
-// Calculate total SKS (extract number from "4 SKS" format)
-const totalSKS = computed(() => {
-  return filteredSchedules.value.reduce((sum, schedule) => {
-    const sksValue = parseInt(schedule.sks.replace(' SKS', '')) || 0
-    return sum + sksValue
-  }, 0)
+// Text color based on background
+const textColor = computed(() => {
+  if (totalSesi.value > 25) return 'text-black'
+  return 'text-white'
 })
 
-// Calculate total sessions per week (extract number from "6 Sesi" format)
-const totalSesi = computed(() => {
-  return filteredSchedules.value.reduce((sum, schedule) => {
-    const sesiValue = parseInt(schedule.sesi.replace(' Sesi', '')) || 0
-    return sum + sesiValue
-  }, 0)
+// Icon color based on background
+const iconColor = computed(() => {
+  if (totalSesi.value > 25) return 'text-black'
+  return 'text-green-600'
 })
 
 // Print handler
-const handlePrint = () => {
-  window.print()
-}
+const handlePrint = () => window.print()
 </script>
 
 <style scoped>
 @media print {
-  /* Hide dropdown selector when printing */
   .bg-white.rounded-xl.shadow-lg.p-6.mb-8 {
     display: none;
   }
 
-  /* Optimize table for printing */
   .overflow-x-auto {
     overflow: visible;
   }
