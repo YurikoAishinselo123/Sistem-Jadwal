@@ -3,7 +3,7 @@ export interface IFilterDashboard {
   hari: string
   programStudi: string
   mataKuliah: string
-  dosen: string
+  jenisJadwal: string
   laboran: string
   waktuPerkuliahan: string
 }
