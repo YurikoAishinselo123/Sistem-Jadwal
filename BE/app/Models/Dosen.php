@@ -11,6 +11,7 @@ class Dosen extends Model
     /** @use HasFactory<\Database\Factories\DosenFactory> */
     use HasFactory;
         protected $fillable = [
+        'kode_dosen',
         'nama_dosen',
     ];
     public function jadwal():HasMany{

@@ -23,35 +23,46 @@ class StoreJadwalRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'periode_tahun_id'=> 'required',
             'hari_jadwal' => 'required',
+            'jenis_jadwal' => 'required',
             'waktu_mulai'=> 'required',
-            'sesi'=> 'required',
-            'tahun_ajaran'=> 'required',
-            'id_prodi'=> ['required'],
-            'id_makul'=> ['required'],
-            'id_dosen'=> ['required',
-            Rule::unique('jadwals','id_dosen')
-            ->where('tahun_ajaran', $this->input('tahun_ajaran'))
+            'waktu_selesai'=> 'required',
+            'makul_id'=> 'required',
+            'status'=> 'required',
+            'prodi_id'=> 'required',
+            'kelas'=> 'required',
+            'ruangan_id'=> ['required',
+            Rule::unique('jadwals','ruangan_id')
+            ->where('periode_tahun_id', $this->input('periode_tahun_id'))
             ->where('hari_jadwal', $this->input('hari_jadwal'))
             ->where('waktu_mulai', $this->input('waktu_mulai'))],
-            'id_laboran'=> ['required',
-            Rule::unique('jadwals','id_laboran')
-            ->where('tahun_ajaran', $this->input('tahun_ajaran'))
+            'dosen_1'=> ['required',
+            Rule::unique('jadwals','dosen_1')
+            ->where('periode_tahun_id', $this->input('periode_tahun_id'))
+            ->where('hari_jadwal', $this->input('hari_jadwal'))
+            ->where('waktu_mulai', $this->input('waktu_mulai'))
+            ->where('dosen_2', $this->input('dosen_1'))],
+            'dosen_2'=> ['required',
+            Rule::unique('jadwals','dosen_2')
+            ->where('periode_tahun_id', $this->input('periode_tahun_id'))
+            ->where('hari_jadwal', $this->input('hari_jadwal'))
+            ->where('waktu_mulai', $this->input('waktu_mulai'))
+            ->where('dosen_1', $this->input('dosen_2'))],
+            'laboran_id'=> ['required',
+            Rule::unique('jadwals','laboran_id')
+            ->where('periode_tahun_id', $this->input('periode_tahun_id'))
             ->where('hari_jadwal', $this->input('hari_jadwal'))
             ->where('waktu_mulai', $this->input('waktu_mulai'))],
-            'id_ruangan'=> ['required',
-            Rule::unique('jadwals','id_ruangan')
-            ->where('tahun_ajaran', $this->input('tahun_ajaran'))
-            ->where('hari_jadwal', $this->input('hari_jadwal'))
-            ->where('waktu_mulai', $this->input('waktu_mulai'))]
         ];
     }
     public function messages()
     {
         return [
-            'id_dosen.unique' => 'dosen sudah terjadwal di sesi ini.',
-            'id_laboran.unique' => 'laboran sudah terjadwal di sesi ini.',
-            'id_ruangan.unique' => 'ruangan ini sudah digunakan.',
+            'dosen_1.unique' => 'dosen sudah terjadwal di sesi ini.',
+            'dosen_2.unique' => 'dosen sudah terjadwal di sesi ini.',
+            'laboran_id.unique' => 'laboran sudah terjadwal di sesi ini.',
+            'ruangan_id.unique' => 'ruangan ini sudah digunakan.',
         ];
     }
 }

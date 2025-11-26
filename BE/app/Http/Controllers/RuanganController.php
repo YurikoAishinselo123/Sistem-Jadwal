@@ -30,8 +30,8 @@ class RuanganController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $fields = $request->validate([
-            'nama_ruangan'=>'required',
-            'jenis_ruangan'=>'required'
+            'kode_ruangan'=>'required',
+            'nama_ruangan'=>'required'
         ]);//
         $ruangan = Ruangan::create($fields);
         return ['ruangan' => $ruangan];
@@ -42,7 +42,7 @@ class RuanganController extends Controller implements HasMiddleware
      */
     public function show(Ruangan $ruangan)
     {
-        //
+        return $ruangan->jadwal()->get()->all();//
     }
 
     /**
@@ -51,8 +51,8 @@ class RuanganController extends Controller implements HasMiddleware
     public function update(Request $request, Ruangan $ruangan)
     {
         $fields = $request->validate([
-            'nama_ruangan'=>'required',
-            'jenis_ruangan'=>'required'
+            'kode_ruangan'=>'required',
+            'nama_ruangan'=>'required'
         ]);//
         $ruangan->Ruangan::update($fields);
         return ['ruangan' => $ruangan];

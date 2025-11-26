@@ -30,7 +30,8 @@ class DosenController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $fields=$request->validate([
-            'nama_dosen' => 'required'        
+            'kode_dosen' => 'required',
+            'nama_dosen' => 'required'
         ]);//
 
         $dosen = Dosen::create($fields);
@@ -42,7 +43,8 @@ class DosenController extends Controller implements HasMiddleware
      */
     public function show(Dosen $dosen)
     {
-        return $dosen->jadwal()->all();//
+        
+        return $dosen->jadwal()->where();//
     }
 
     /**
@@ -51,6 +53,7 @@ class DosenController extends Controller implements HasMiddleware
     public function update(Request $request, Dosen $dosen)
     {
         $fields=$request->validate([
+            'kode_dosen' => 'required',
             'nama_dosen' => 'required'        
         ]);//
 

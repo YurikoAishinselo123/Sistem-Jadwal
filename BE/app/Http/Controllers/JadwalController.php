@@ -22,7 +22,7 @@ class JadwalController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        return Jadwal::filter()->get();//
+        return Jadwal::all();//
     }
 
     /**

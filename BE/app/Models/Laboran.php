@@ -11,6 +11,7 @@ class Laboran extends Model
     /** @use HasFactory<\Database\Factories\LaboranFactory> */
     use HasFactory;
         protected $fillable = [
+        'kode_laboran',
         'nama_laboran',
     ];
     

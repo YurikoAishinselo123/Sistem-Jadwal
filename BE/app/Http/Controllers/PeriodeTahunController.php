@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Prodi;
-use App\Http\Requests\StoreProdiRequest;
-use App\Http\Requests\UpdateProdiRequest;
+use App\Models\PeriodeTahun;
+use App\Http\Requests\StorePeriodeTahunRequest;
+use App\Http\Requests\UpdatePeriodeTahunRequest;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
-class ProdiController extends Controller implements HasMiddleware
+class PeriodeTahunController extends Controller implements HasMiddleware
 {
     public static function middleware(){
         return[
@@ -21,7 +21,7 @@ class ProdiController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        Prodi::all();//
+        return PeriodeTahun::all();//
     }
 
     /**
@@ -30,19 +30,20 @@ class ProdiController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $fields=$request->validate([
-            'kode_prodi' => 'required',
-            'nama_prodi' => 'required'        
+            'periode' => 'required',
+            'status' => 'required',
+            'tanggal_mulai' => 'required'
         ]);//
 
-        $prodi = Prodi::create($fields);
-        return ['prodi' => $prodi];        //
-        //
+        $input = PeriodeTahun::create($fields);
+        return ['Periode' => $input];//
+        ////
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Prodi $prodi)
+    public function show(PeriodeTahun $periodeTahun)
     {
         //
     }
@@ -50,23 +51,24 @@ class ProdiController extends Controller implements HasMiddleware
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Prodi $prodi)
+    public function update(Request $request, PeriodeTahun $periodeTahun)
     {
         $fields=$request->validate([
-            'kode_prodi' => 'required',
-            'nama_prodi' => 'required'
+            'periode' => 'required',
+            'status' => 'required',
+            'tanggal_mulai' => 'required'
         ]);//
 
-        $prodi->Prodi::update($fields);
-        return ['prodi' => $prodi];
+        $input = PeriodeTahun::update($fields);
+        return ['Periode' => $input];//
         //
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Prodi $prodi)
+    public function destroy(PeriodeTahun $periodeTahun)
     {
-        $prodi->delete();//
+        $periodeTahun->delete();//
     }
 }
