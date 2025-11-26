@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 import logo from '../assets/image/Logo.png'
@@ -40,6 +40,19 @@ const isActiveRoute = (routeName: string) => {
   }
   return route.name === routeName
 }
+
+// Logout function
+const handleLogout = () => {
+  // Clear authentication data
+  localStorage.removeItem('isAuthenticated')
+  localStorage.removeItem('username')
+
+  // Close mobile menu if open
+  isOpen.value = false
+
+  // Redirect to login page
+  router.push({ name: 'login' })
+}
 </script>
 
 <template>
@@ -55,30 +68,57 @@ const isActiveRoute = (routeName: string) => {
     </div>
 
     <!-- Menu -->
-    <ul class="flex flex-col">
-      <table class="w-full text-black border-collapse">
-        <tr
-          v-for="item in menuItems"
-          :key="item.routeName"
-          @click="goTo(item.routeName)"
-          class="h-14 cursor-pointer transition"
-          :class="
-            isActiveRoute(item.routeName) ? 'bg-active-blue text-white' : 'hover:bg-hover-blue'
-          "
-        >
-          <!-- INNER CELL WRAPPER for padding -->
-          <td colspan="2" class="py-3 pl-2">
-            <div class="grid grid-cols-[60px_1fr] items-center">
-              <!-- ICON -->
-              <component :is="item.icon" class="w-5 h-5 mx-auto" />
+    <div class="flex flex-col flex-1">
+      <ul class="flex flex-col flex-1">
+        <table class="w-full text-black border-collapse">
+          <tr
+            v-for="item in menuItems"
+            :key="item.routeName"
+            @click="goTo(item.routeName)"
+            class="h-14 cursor-pointer transition"
+            :class="
+              isActiveRoute(item.routeName) ? 'bg-active-blue text-white' : 'hover:bg-hover-blue'
+            "
+          >
+            <!-- INNER CELL WRAPPER for padding -->
+            <td colspan="2" class="py-3 pl-2">
+              <div class="grid grid-cols-[60px_1fr] items-center">
+                <!-- ICON -->
+                <component :is="item.icon" class="w-5 h-5 mx-auto" />
 
-              <!-- TEXT -->
-              <span class="text-md font-medium">{{ item.name }}</span>
-            </div>
-          </td>
-        </tr>
-      </table>
-    </ul>
+                <!-- TEXT -->
+                <span class="text-md font-medium">{{ item.name }}</span>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </ul>
+
+      <!-- Logout Button -->
+      <div class="p-4 mt-auto">
+        <button
+          @click="handleLogout"
+          class="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors font-medium"
+        >
+          <!-- Logout Icon SVG -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+          Keluar
+        </button>
+      </div>
+    </div>
   </nav>
 
   <!-- MOBILE NAVBAR -->
@@ -147,6 +187,31 @@ const isActiveRoute = (routeName: string) => {
             </td>
           </tr>
         </table>
+
+        <!-- Mobile Logout Button -->
+        <div class="p-4 border-t border-gray-200">
+          <button
+            @click="handleLogout"
+            class="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition-colors font-medium"
+          >
+            <!-- Logout Icon SVG -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            Keluar
+          </button>
+        </div>
       </div>
     </transition>
   </header>

@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 import MainLayout from '@/layouts/MainLayout.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import TambahJadwalView from '@/views/TambahJadwalView.vue'
@@ -12,26 +12,66 @@ import MasterDataRuangKelas from '@/views/masterData/MasterDataRuangKelas.vue'
 import MasterDataWaktuPerkuliahan from '@/views/masterData/MasterDataWaktuPerkuliahan.vue'
 import DashboardViewDetail from '@/views/dashboard/DashboardViewDetail.vue'
 import MasterDataPeriode from '@/views/masterData/MasterDataPeriode.vue'
+import LoginPage from '@/views/authentication/LoginPage.vue'
+import SignupPage from '@/views/authentication/SignupPage.vue'
 
 const routes = [
+  // Auth routes (no layout)
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginPage,
+    props: (route: RouteLocationNormalized) => ({ successMessage: route.params.message }),
+    meta: { requiresGuest: true },
+  },
+  {
+    path: '/signup',
+    name: 'signup',
+    component: SignupPage,
+    meta: { requiresGuest: true },
+  },
+
+  // Main app routes (with MainLayout)
   {
     path: '/',
     component: MainLayout,
+    meta: { requiresAuth: true },
     children: [
-      { path: '', name: 'dashboard', component: DashboardView },
-      { path: 'tambah-jadwal', name: 'tambahJadwal', component: TambahJadwalView },
-      { path: 'beban-kerja-dosen', name: 'bebanKerjaDosen', component: BebanKerjaDosenView },
-      { path: 'beban-ruang-kelas', name: 'bebanRuangKelas', component: BebanRuangKelasView },
-      { path: 'detail', name: 'detail', component: DashboardViewDetail },
+      {
+        path: '',
+        name: 'dashboard',
+        component: DashboardView,
+      },
+      {
+        path: 'tambah-jadwal',
+        name: 'tambahJadwal',
+        component: TambahJadwalView,
+      },
+      {
+        path: 'beban-kerja-dosen',
+        name: 'bebanKerjaDosen',
+        component: BebanKerjaDosenView,
+      },
+      {
+        path: 'beban-ruang-kelas',
+        name: 'bebanRuangKelas',
+        component: BebanRuangKelasView,
+      },
+      {
+        path: 'detail',
+        name: 'detail',
+        component: DashboardViewDetail,
+      },
     ],
   },
 
-  // Separate Master Data Layout (different from MainLayout)
+  // Master data routes (with MasterDataLayout)
   {
     path: '/master-data',
     name: 'masterData',
     component: MasterDataLayout,
     redirect: '/master-data/makul',
+    meta: { requiresAuth: true },
     children: [
       {
         path: 'makul',
@@ -70,6 +110,25 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// Navigation guard for authentication
+router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalized, next) => {
+  // Check if user is authenticated (you can modify this logic based on your auth system)
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
+
+  // If route requires authentication and user is not authenticated
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next({ name: 'login' })
+  }
+  // If route is for guests only (login/signup) and user is authenticated
+  else if (to.meta.requiresGuest && isAuthenticated) {
+    next({ name: 'dashboard' })
+  }
+  // Otherwise, proceed normally
+  else {
+    next()
+  }
 })
 
 export default router
