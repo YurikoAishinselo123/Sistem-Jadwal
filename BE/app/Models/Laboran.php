@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Laboran extends Model
 {
@@ -12,4 +13,8 @@ class Laboran extends Model
         protected $fillable = [
         'nama_laboran',
     ];
+    
+    public function jadwal():HasMany{
+        return $this->hasMany(Jadwal::class);
+    }
 }

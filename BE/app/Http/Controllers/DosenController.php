@@ -42,7 +42,7 @@ class DosenController extends Controller implements HasMiddleware
      */
     public function show(Dosen $dosen)
     {
-        //
+        return $dosen->jadwal()->all();//
     }
 
     /**

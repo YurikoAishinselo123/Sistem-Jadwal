@@ -15,13 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('hari_jadwal');
             $table->time('waktu_mulai');
+            $table->time('waktu_selesai');
             $table->string('sesi');
             $table->year('tahun_ajaran');
-            $table->foreignId('id_prodi')->constrained();
-            $table->foreignId('id_makul')->constrained();
-            $table->foreignId('id_dosen')->constrained();
-            $table->foreignId('id_laboran')->constrained();
-            $table->foreignId('id_ruangan')->constrained();
+            $table->foreignId('prodi_id')->constrained();
+            $table->foreignId('makul_id')->constrained();
+            $table->foreignId('dosen_1')->references('id')->on('dosens');
+            $table->foreignId('dosen_2')->references('id')->on('dosens');
+            $table->foreignId('laboran_id')->constrained();
+            $table->foreignId('ruangan_id')->constrained();
             $table->timestamps();
         });
     }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('beban_ajars', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_dosen');
+            $table->foreignId('dosen_id');
             $table->integer('beban_sesi');
             $table->integer('beban_sks');
             $table->timestamps();
