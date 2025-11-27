@@ -43,8 +43,10 @@ class DosenController extends Controller implements HasMiddleware
      */
     public function show(Dosen $dosen)
     {
-        
-        return $dosen->jadwal()->where();//
+        $dosen1_data = $dosen->jadwal1()->get();
+        $dosen2_data = $dosen->jadwal2()->get();//
+        $total_data = $dosen1_data->merge($dosen2_data);
+        return $total_data;
     }
 
     /**

@@ -14,7 +14,10 @@ class Dosen extends Model
         'kode_dosen',
         'nama_dosen',
     ];
-    public function jadwal():HasMany{
-        return $this->hasMany(Jadwal::class);
+    public function jadwal1():HasMany{
+        return $this->hasMany(Jadwal::class, "dosen_1");
+    }
+    public function jadwal2():HasMany{
+        return $this->hasMany(Jadwal::class, "dosen_2");
     }
 }
