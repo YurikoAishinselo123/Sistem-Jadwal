@@ -12,7 +12,7 @@
         v-model="selectedDosen"
         :options="dosenOptions"
         placeholder="Pilih dosen untuk melihat beban kerja dosen"
-        label="Dosen"
+        label="Kelas"
         :searchable="true"
         class="max-w-full"
       />
