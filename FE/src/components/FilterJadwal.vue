@@ -40,6 +40,7 @@
         v-model="filters.jenisJadwal"
         :options="options.jenisJadwal"
         placeholder="Jenis Jadwal"
+        :clearable="false"
         :searchable="true"
       />
 
@@ -110,16 +111,21 @@ const filters = reactive<Filters>({
   hari: '',
   programStudi: '',
   mataKuliah: '',
-  jenisJadwal: '',
+  jenisJadwal: 'Jadwal Semester',
   laboran: '',
   waktuPerkuliahan: '',
 })
 
-// Reset function
+// RESET
 const resetFilter = () => {
-  Object.keys(filters).forEach((key) => {
-    filters[key as keyof typeof filters] = ''
-  })
+  filters.periodeTahunAjaran = ''
+  filters.hari = ''
+  filters.programStudi = ''
+  filters.mataKuliah = ''
+  filters.jenisJadwal = 'Jadwal Semester'
+  filters.laboran = ''
+  filters.waktuPerkuliahan = ''
+
   emit('reset')
 }
 

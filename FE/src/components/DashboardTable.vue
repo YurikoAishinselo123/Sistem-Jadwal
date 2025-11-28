@@ -1,5 +1,5 @@
 <template>
-  <div class="overflow-hidden bg-white rounded-lg shadow-lg">
+  <div class="flex flex-col overflow-hidden min-h-0 shadow-lg">
     <!-- Header Section -->
     <div class="bg-active-blue text-white p-4 flex justify-between items-center">
       <div>
@@ -16,11 +16,10 @@
       </button>
     </div>
 
-    <!-- Table Section -->
-    <div class="w-full overflow-x-auto max-w-full">
-      <table class="min-w-full divide-y divide-gray-200">
-        <!-- Table Header -->
-        <thead class="bg-header-table">
+    <!-- TABLE SCROLL WRAPPER -->
+    <div class="overflow-auto max-h-[45vh] bg-white">
+      <table class="w-full table-auto">
+        <thead class="bg-header-table sticky top-0 z-10">
           <tr>
             <th
               v-if="hasActions"
@@ -31,16 +30,13 @@
               v-for="column in columns"
               :key="column.key"
               class="px-4 py-4 text-left text-xs font-semibold text-black uppercase tracking-wider"
-              :class="{
-                'text-center': ['ruang', 'status'].includes(column.key),
-              }"
+              :class="{ 'text-center': ['ruang', 'status'].includes(column.key) }"
             >
               {{ column.label }}
             </th>
           </tr>
         </thead>
 
-        <!-- Table Body -->
         <tbody class="bg-white divide-y divide-gray-200 text-gray-800">
           <tr v-for="(row, rowIndex) in data" :key="rowIndex">
             <!-- Actions -->
@@ -49,7 +45,6 @@
                 <button
                   @click="toggleMenu(rowIndex)"
                   class="p-2 hover:bg-gray-100 rounded-full transition-colors action-button"
-                  type="button"
                 >
                   <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 16 16">
                     <circle cx="8" cy="2" r="1.5" />
@@ -63,28 +58,22 @@
                   v-if="activeMenu === rowIndex"
                   class="absolute top-1/2 -translate-y-1/2 left-full bg-white rounded-xl shadow-xl border border-gray-200 z-50 action-menu min-w-[120px]"
                 >
-                  <button
-                    @click=""
-                    class="w-full px-4 py-3 flex items-center gap-4 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors whitespace-nowrap rounded-t-xl"
-                  >
-                    <Detail_icon class="w-5 h-5" />
-                    <span>Detail</span>
+                  <button @click="" class="w-full px-4 py-3 flex gap-4 hover:bg-gray-100 text-sm">
+                    <Detail_icon class="w-5 h-5" /> Detail
                   </button>
 
                   <button
-                    @click="handleEdit(row, rowIndex)"
-                    class="w-full px-4 py-3 flex items-center gap-4 text-left text-sm text-gray-700 hover:bg-gray-100 transition-colors whitespace-nowrap"
+                    @click="handleEdit(row)"
+                    class="w-full px-4 py-3 flex gap-4 hover:bg-gray-100 text-sm"
                   >
-                    <Edit_icon class="w-5 h-5" />
-                    <span>Edit</span>
+                    <Edit_icon class="w-5 h-5" /> Edit
                   </button>
 
                   <button
-                    @click="handleDelete(row, rowIndex)"
-                    class="w-full px-4 py-3 flex items-center gap-4 text-left text-sm text-red-600 hover:bg-red-50 transition-colors whitespace-nowrap rounded-b-xl"
+                    @click="handleDelete(row)"
+                    class="w-full px-4 py-3 flex gap-4 hover:bg-red-50 text-sm text-red-600"
                   >
-                    <Delete_icon class="w-5 h-5" />
-                    <span>Delete</span>
+                    <Delete_icon class="w-5 h-5" /> Delete
                   </button>
                 </div>
               </div>
@@ -94,16 +83,12 @@
               v-for="column in columns"
               :key="column.key"
               class="px-4 py-4 text-xs align-middle"
-              :class="{
-                'text-center': ['ruang', 'status'].includes(column.key),
-              }"
+              :class="{ 'text-center': ['ruang', 'status'].includes(column.key) }"
             >
-              <!-- Mata Kuliah: break line -->
               <template v-if="column.key === 'mataKuliah'">
                 <span v-html="formatMataKuliah(row[column.key])"></span>
               </template>
 
-              <!-- Dosen -->
               <template v-else-if="column.key === 'dosen'">
                 <div class="flex flex-col">
                   <span>{{ formatDosen(row.dosen1 || row.dosen) }}</span>
@@ -111,14 +96,12 @@
                 </div>
               </template>
 
-              <!-- Default -->
               <template v-else>
                 {{ row[column.key] }}
               </template>
             </td>
           </tr>
 
-          <!-- When no data -->
           <tr v-if="data.length === 0">
             <td
               :colspan="columns.length + (hasActions ? 1 : 0)"
@@ -144,14 +127,10 @@ const props = defineProps({
   columns: Array,
   data: Array,
   hasActions: Boolean,
-  emptyMessage: {
-    type: String,
-    default: 'Tidak ada data',
-  },
+  emptyMessage: { type: String, default: 'Tidak ada data' },
 })
 
 const emit = defineEmits(['edit', 'delete', 'print'])
-
 const activeMenu = ref(null)
 
 const toggleMenu = (rowIndex) => {
@@ -176,9 +155,7 @@ const handleClickOutside = (event) => {
     if (menu.contains(event.target)) clickedInside = true
   })
 
-  if (!clickedInside && !event.target.closest('.action-button')) {
-    activeMenu.value = null
-  }
+  if (!clickedInside && !event.target.closest('.action-button')) activeMenu.value = null
 }
 
 onMounted(() => document.addEventListener('click', handleClickOutside))
@@ -200,3 +177,18 @@ const formatDosen = (name) => {
   return shortened + (degrees.length > 0 ? `,${degrees.join(',')}` : '')
 }
 </script>
+
+<style scoped>
+/* Scrollbar styling */
+.flex-1::-webkit-scrollbar {
+  width: 8px;
+}
+
+.flex-1::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+.flex-1::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+</style>
