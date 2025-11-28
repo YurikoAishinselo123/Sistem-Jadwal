@@ -73,6 +73,7 @@ import { ref, computed } from 'vue'
 import CustomDropdown from '@/components/CustomDropdown.vue'
 import DashboardTable from '@/components/DashboardTable.vue'
 import Room_icon from '../assets/image/Room_icon.svg'
+import BebanData from '../dummy data/bebanData.json'
 
 // Schedule interface
 interface ISchedule {
@@ -112,67 +113,11 @@ const dosenOptions = [
 ]
 
 // Sample schedule data
-const scheduleData = ref<ISchedule[]>([
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '108 B',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Senin',
-    kodeMakul: 'TI101',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Algoritma',
-    dosen: 'Adhe Aryswan, S.Pd., M.Si.',
-    ruang: '201 A',
-    waktu: '09:30 - 12:00',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-  {
-    hari: 'Selasa',
-    kodeMakul: 'TI102',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Pemrograman',
-    dosen: 'Adhe Aryswan, S.Pd., M.Si.',
-    ruang: '202 B',
-    waktu: '13:00 - 15:30',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-  {
-    hari: 'Rabu',
-    kodeMakul: 'TI103',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Basis Data',
-    dosen: 'Haposan Vincentius, S.T., M.Sc.',
-    ruang: '301 A',
-    waktu: '07:00 - 09:30',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-  {
-    hari: 'Kamis',
-    kodeMakul: 'TI104',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Jaringan Komputer',
-    dosen: 'Haposan Vincentius, S.T., M.Sc.',
-    ruang: '302 B',
-    waktu: '13:00 - 15:30',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-])
+const bebanData = ref(BebanData)
 
 // Filter schedules by selected dosen
 const filteredSchedules = computed(() =>
-  scheduleData.value.filter((schedule) => schedule.dosen === selectedDosen.value),
+  bebanData.value.filter((schedule) => schedule.dosen === selectedDosen.value),
 )
 
 // Total SKS
