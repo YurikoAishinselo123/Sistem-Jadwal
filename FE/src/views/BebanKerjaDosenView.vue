@@ -104,13 +104,7 @@ const columns = ref([
 const selectedDosen = ref('')
 
 // Dosen options
-const dosenOptions = [
-  'Dr. Suryo, S.Pd, M.Pd',
-  'Adhe Aryswan, S.Pd., M.Si.',
-  'Haposan Vincentius, S.T., M.Sc.',
-  'Dr. Budi Santoso, M.Kom.',
-  'Prof. Siti Rahayu, Ph.D.',
-]
+const dosenOptions = [...new Set(BebanData.map((item) => item.dosen))]
 
 // Sample schedule data
 const bebanData = ref(BebanData)
