@@ -2,16 +2,16 @@
   <div>
     <!-- Header -->
     <div class="mb-8 mt-12 sm:mt-10 xl:mt-0">
-      <h1 class="text-xl sm:text-3xl font-bold text-black">Beban Kerja Dosen</h1>
-      <p class="text-sm sm:text-lg text-black">Monitor beban mengajar dosen per minggu</p>
+      <h1 class="text-xl sm:text-3xl font-bold text-black">Beban Ruang Kelas</h1>
+      <p class="text-sm sm:text-lg text-black">Monitor beban ruang kelas per minggu</p>
     </div>
 
-    <!-- Dosen Selector -->
+    <!-- Ruang Kelas Selector -->
     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
       <CustomDropdown
-        v-model="selectedDosen"
-        :options="dosenOptions"
-        placeholder="Pilih dosen untuk melihat beban kerja dosen"
+        v-model="selectedRuang"
+        :options="ruangOptions"
+        placeholder="Pilih ruang kelas untuk melihat beban ruang kelas"
         label="Kelas"
         :searchable="true"
         class="max-w-full"
@@ -19,7 +19,7 @@
     </div>
 
     <!-- Workload Summary Card -->
-    <div v-if="selectedDosen" :class="`${cardBgColor} rounded-xl shadow-lg p-8 mb-6 text-white`">
+    <div v-if="selectedRuang" :class="`${cardBgColor} rounded-xl shadow-lg p-8 mb-6 text-white`">
       <div class="flex items-center gap-6">
         <!-- Icon Cell -->
         <div class="bg-white rounded-full p-4 flex items-center justify-center w-16 h-16">
@@ -41,7 +41,7 @@
 
         <!-- Text Cell -->
         <div class="flex flex-col justify-center" :class="textColor">
-          <h2 class="text-lg font-medium mb-2">Total Beban Kerja {{ selectedDosen }}</h2>
+          <h2 class="text-lg font-medium mb-2">Total Beban Ruang Kelas {{ selectedRuang }}</h2>
           <div class="text-2xl sm:text-3xl font-bold">
             {{ totalSKS }} SKS | {{ totalSesi }} Sesi / Minggu
           </div>
@@ -50,20 +50,20 @@
     </div>
 
     <!-- Schedule Table using DashboardTable Component -->
-    <div v-if="selectedDosen">
+    <div v-if="selectedRuang">
       <DashboardTable
         :columns="columns"
         :data="filteredSchedules"
         :has-actions="false"
-        empty-message="Tidak ada jadwal ditemukan untuk dosen ini"
+        empty-message="Tidak ada jadwal ditemukan untuk ruang kelas ini"
         @print="handlePrint"
       />
     </div>
 
-    <!-- Empty State - No Dosen Selected -->
+    <!-- Empty State - No Ruang Kelas Selected -->
     <div v-else class="bg-white rounded-xl shadow-lg p-12 text-center">
       <img :src="Room_icon" class="w-20 mx-auto" />
-      <p class="text-gray-500 mt-6">Pilih dosen untuk melihat beban kerja mengajar</p>
+      <p class="text-gray-500 mt-6">Pilih ruang kelas untuk melihat beban ruang kelas</p>
     </div>
   </div>
 </template>
@@ -100,24 +100,18 @@ const columns = ref([
   { key: 'waktu', label: 'Waktu' },
 ])
 
-// Selected dosen
-const selectedDosen = ref('')
+// Selected ruang
+const selectedRuang = ref('')
 
-// Dosen options
-const dosenOptions = [
-  'Dr. Suryo, S.Pd, M.Pd',
-  'Adhe Aryswan, S.Pd., M.Si.',
-  'Haposan Vincentius, S.T., M.Sc.',
-  'Dr. Budi Santoso, M.Kom.',
-  'Prof. Siti Rahayu, Ph.D.',
-]
+// Ruang options
+const ruangOptions = [...new Set(BebanData.map((item) => item.ruang))]
 
 // Sample schedule data
 const bebanData = ref(BebanData)
 
-// Filter schedules by selected dosen
+// Filter schedules by selected ruang kelas
 const filteredSchedules = computed(() =>
-  bebanData.value.filter((schedule) => schedule.dosen === selectedDosen.value),
+  bebanData.value.filter((schedule) => schedule.ruang === selectedRuang.value),
 )
 
 // Total SKS
