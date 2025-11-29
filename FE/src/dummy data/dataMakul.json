@@ -1,0 +1,62 @@
+[
+  {
+    "kode": "MK001",
+    "nama": "Algoritma dan Pemrograman"
+  },
+  {
+    "kode": "MK002",
+    "nama": "Struktur Data"
+  },
+  {
+    "kode": "MK003",
+    "nama": "Basis Data"
+  },
+  {
+    "kode": "MK004",
+    "nama": "Jaringan Komputer"
+  },
+  {
+    "kode": "MK005",
+    "nama": "Sistem Operasi"
+  },
+  {
+    "kode": "MK006",
+    "nama": "Pemrograman Berorientasi Objek"
+  },
+  {
+    "kode": "MK007",
+    "nama": "Rekayasa Perangkat Lunak"
+  },
+  {
+    "kode": "MK008",
+    "nama": "Kecerdasan Buatan"
+  },
+  {
+    "kode": "MK009",
+    "nama": "Pemrograman Web"
+  },
+  {
+    "kode": "MK010",
+    "nama": "Keamanan Informasi"
+  },
+  {
+    "kode": "MK011",
+    "nama": "Manajemen Proyek TI"
+  },
+  {
+    "kode": "MK012",
+    "nama": "Grafika Komputer"
+  },
+  {
+    "kode": "MK013",
+    "nama": "Sistem Informasi"
+  },
+  {
+    "kode": "MK014",
+    "nama": "Analisis dan Perancangan Sistem"
+  },
+  {
+    "kode": "MK015",
+    "nama": "Pemrograman Mobile"
+  }
+]

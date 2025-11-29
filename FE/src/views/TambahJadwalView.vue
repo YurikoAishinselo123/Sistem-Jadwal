@@ -1,13 +1,10 @@
 <template>
-  <!-- Header -->
   <div class="mb-8 mt-12 sm:mt-10 xl:mt-0">
     <h1 class="text-xl sm:text-3xl font-bold text-black">Tambah Jadwal</h1>
     <p class="text-sm sm:text-lg text-black">
       Isi form di bawah untuk menambahkan jadwal perkuliahan
     </p>
   </div>
-
-  <!-- Form -->
   <div class="bg-white rounded-xl shadow-lg p-8">
     <form @submit.prevent="handleSubmit">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -15,22 +12,20 @@
         <CustomDropdown
           v-model="formData.periodeTahunAjaran"
           :options="dropdownOptions.periodeTahunAjaran"
-          placeholder="Pilih periode tahun ajaran"
           label="Periode Tahun Ajaran"
-          :searchable="false"
-          :clearable="false"
+          placeholder="Pilih periode tahun ajaran"
           :required="true"
+          :showError="showError.periodeTahunAjaran"
         />
 
         <!-- Hari -->
         <CustomDropdown
           v-model="formData.hari"
           :options="dropdownOptions.hari"
-          placeholder="Pilih hari"
           label="Hari"
-          :searchable="true"
-          :clearable="false"
+          placeholder="Pilih hari"
           :required="true"
+          :showError="showError.hari"
         />
 
         <!-- Jenis Jadwal -->
@@ -42,6 +37,7 @@
           :searchable="false"
           :clearable="false"
           :required="true"
+          :showError="showError.jenisJadwal"
         />
 
         <!-- Time Selection Row - Waktu Mulai and Waktu Selesai -->
@@ -55,8 +51,8 @@
             :searchable="true"
             :clearable="false"
             :required="true"
+            :showError="showError.waktuMulai"
           />
-
           <!-- Waktu Selesai Perkuliahan -->
           <CustomDropdown
             v-model="formData.waktuSelesai"
@@ -66,6 +62,7 @@
             :searchable="true"
             :clearable="false"
             :required="true"
+            :showError="showError.waktuSelesai"
           />
         </div>
 
@@ -78,6 +75,7 @@
           :searchable="true"
           :clearable="false"
           :required="true"
+          :showError="showError.mataKuliah"
         />
 
         <!-- Status -->
@@ -89,6 +87,7 @@
           :searchable="true"
           :clearable="false"
           :required="true"
+          :showError="showError.status"
         />
 
         <!-- Program Studi -->
@@ -100,6 +99,7 @@
           :searchable="true"
           :clearable="false"
           :required="true"
+          :showError="showError.programStudi"
         />
 
         <!-- Kelas -->
@@ -111,6 +111,7 @@
           :searchable="true"
           :clearable="false"
           :required="true"
+          :showError="showError.kelas"
         />
 
         <!-- Dosen 1 -->
@@ -122,6 +123,7 @@
           :searchable="true"
           :clearable="false"
           :required="true"
+          :showError="showError.dosen1"
         />
 
         <!-- Dosen 2 -->
@@ -133,6 +135,7 @@
           :searchable="true"
           :clearable="false"
           :required="true"
+          :showError="showError.dosen2"
         />
 
         <!-- Laboran -->
@@ -144,6 +147,7 @@
           :searchable="true"
           :clearable="false"
           :required="true"
+          :showError="showError.laboran"
         />
 
         <!-- Ruang Kelas -->
@@ -154,6 +158,7 @@
           label="Ruang Kelas"
           :searchable="true"
           :clearable="true"
+          :showError="showError.ruangKelas"
         />
       </div>
 
@@ -203,7 +208,6 @@ const timeSlots = {
   malam: ['17:10', '18:00', '19:00', '19:35', '20:10', '20:45', '21:20', '21:55', '22:30', '23:05'],
 }
 
-// All time slots combined
 const allTimeSlots = [...timeSlots.pagi, ...timeSlots.malam]
 
 // Form data
@@ -223,7 +227,24 @@ const formData = reactive({
   ruangKelas: '',
 })
 
-// Determine which session (pagi/malam) based on selected start time
+// Error state
+const showError = reactive({
+  periodeTahunAjaran: false,
+  hari: false,
+  jenisJadwal: false,
+  waktuMulai: false,
+  waktuSelesai: false,
+  mataKuliah: false,
+  status: false,
+  programStudi: false,
+  kelas: false,
+  dosen1: false,
+  dosen2: false,
+  laboran: false,
+  ruangKelas: false,
+})
+
+// Determine session based on start time
 const selectedSession = computed(() => {
   if (!formData.waktuMulai) return null
   if (timeSlots.pagi.includes(formData.waktuMulai)) return 'pagi'
@@ -231,38 +252,25 @@ const selectedSession = computed(() => {
   return null
 })
 
-// Available start times (all times)
-const availableStartTimes = computed(() => {
-  return allTimeSlots
-})
+// Available start times
+const availableStartTimes = computed(() => allTimeSlots)
 
-// Available end times based on selected start time
+// Available end times based on start time
 const availableEndTimes = computed(() => {
   if (!formData.waktuMulai) return allTimeSlots
-
   const session = selectedSession.value
   if (!session) return []
-
-  // Get the appropriate session times
   const sessionTimes = timeSlots[session]
-
-  // Find the index of selected start time
   const startIndex = sessionTimes.indexOf(formData.waktuMulai)
-
-  // Return only times after the start time in the same session
   return sessionTimes.slice(startIndex + 1)
 })
 
-// Watch for changes in waktuMulai to reset waktuSelesai if needed
+// Watch start time changes
 watch(
   () => formData.waktuMulai,
-  (newStartTime) => {
-    // If start time changes, check if end time is still valid
-    if (formData.waktuSelesai) {
-      const validEndTimes = availableEndTimes.value
-      if (!validEndTimes.includes(formData.waktuSelesai)) {
-        formData.waktuSelesai = ''
-      }
+  () => {
+    if (formData.waktuSelesai && !availableEndTimes.value.includes(formData.waktuSelesai)) {
+      formData.waktuSelesai = ''
     }
   },
 )
@@ -270,7 +278,7 @@ watch(
 // Dropdown options
 const dropdownOptions = {
   periodeTahunAjaran: ['Gasal 2024', 'Genap 2024', 'Gasal 2025', 'Genap 2025'],
-  hari: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+  hari: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'],
   jenisJadwal: ['Jadwal Semester', 'Jadwal Ujian', 'Jadwal Pengganti'],
   mataKuliah: [
     'Algoritma',
@@ -294,73 +302,47 @@ const dropdownOptions = {
 
 // Form submission
 const handleSubmit = () => {
-  // Validate required fields
-  const requiredFields = [
-    'periodeTahunAjaran',
-    'hari',
-    'jenisJadwal',
-    'waktuMulai',
-    'waktuSelesai',
-    'mataKuliah',
-    'status',
-    'programStudi',
-    'kelas',
-    'dosen1',
-    'dosen2',
-    'laboran',
-  ]
+  // Reset errors
+  Object.keys(showError).forEach((key) => (showError[key as keyof typeof showError] = false))
 
-  const missingFields = requiredFields.filter((field) => !formData[field as keyof typeof formData])
+  // Validate required fields
+  const requiredFields = Object.keys(showError)
+  const missingFields = requiredFields.filter((key) => !formData[key as keyof typeof formData])
 
   if (missingFields.length > 0) {
+    missingFields.forEach((key) => (showError[key as keyof typeof showError] = true))
     alert('Harap lengkapi semua field yang wajib diisi!')
     return
   }
 
-  // Validate time selection
+  // Validate waktuSelesai
   if (!availableEndTimes.value.includes(formData.waktuSelesai)) {
+    showError.waktuSelesai = true
     alert(
-      'Waktu selesai tidak valid! Pastikan waktu selesai lebih besar dari waktu mulai dan dalam sesi yang sama.',
+      'Waktu selesai tidak valid! Pastikan lebih besar dari waktu mulai dan dalam sesi yang sama.',
     )
     return
   }
 
-  // Create new schedule object
-  const newSchedule = {
-    hari: formData.hari,
-    kodeMakul: 'AUTO-GENERATED',
-    programStudi: formData.programStudi,
-    mataKuliah: formData.mataKuliah,
-    status: formData.status,
-    jenisJadwal: formData.jenisJadwal,
-    dosen1: formData.dosen1,
-    dosen2: formData.dosen2,
-    laboran: formData.laboran,
-    ruang: formData.ruangKelas,
-    waktuMulai: formData.waktuMulai,
-    waktuSelesai: formData.waktuSelesai,
-    waktuPerkuliahan: `${formData.waktuMulai} - ${formData.waktuSelesai}`,
-    sesi: selectedSession.value,
-    periodeTahunAjaran: formData.periodeTahunAjaran,
-  }
-
-  console.log('New schedule:', newSchedule)
-
-  // Here you would typically send this to your backend API
+  // Proceed submission
+  console.log('Form submitted', formData)
   alert('Jadwal berhasil ditambahkan!')
-
-  // Navigate back to dashboard
-  router.push('/dashboard-jadwal')
+  router.push({ name: 'dashboard' })
 }
 
-// Cancel action
+// Cancel
 const handleCancel = () => {
   if (confirm('Apakah Anda yakin ingin membatalkan? Data yang diisi akan hilang.')) {
-    router.push('/dashboard-jadwal')
+    router.push({ name: 'dashboard' })
   }
 }
-</script>
 
-<style scoped>
-/* Add any additional custom styles here if needed */
-</style>
+Object.keys(formData).forEach((key) => {
+  watch(
+    () => formData[key as keyof typeof formData],
+    (newValue) => {
+      if (newValue) showError[key as keyof typeof showError] = false
+    },
+  )
+})
+</script>

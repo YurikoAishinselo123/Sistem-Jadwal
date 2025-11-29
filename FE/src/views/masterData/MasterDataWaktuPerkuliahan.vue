@@ -1,133 +1,136 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import MasterDataTable from '@/components/MasterDataTable.vue'
 import MasterDataModal from '@/components/MasterDataModal.vue'
+import DataRuang from '@/dummy data/dataWaktuPerkuliahan.json'
+import MasterDataAPI from '@/services/masterDataAPI'
 
-// Initial time slots
-const timeSlots = {
-  pagi: [
-    '07:50',
-    '08:40',
-    '09:30',
-    '10:20',
-    '11:10',
-    '12:00',
-    '12:50',
-    '13:40',
-    '14:30',
-    '15:20',
-    '16:10',
-    '17:00',
-  ],
-  malam: ['17:10', '18:00', '19:00', '19:35', '20:10', '20:45', '21:20', '21:55', '22:30', '23:05'],
+// Type for a single jam
+interface IJam {
+  jam: string
+  id: number
 }
 
-// Convert to table items
-const pagiItems = ref(timeSlots.pagi.map((jam) => ({ jam })))
-const malamItems = ref(timeSlots.malam.map((jam) => ({ jam })))
+// Reactive lists
+const pagiItems = ref<IJam[]>([])
+const malamItems = ref<IJam[]>([])
 
 // Modal state
 const showModal = ref(false)
 const modalTitle = ref('')
 const modalSubmitText = ref('')
 const modalFields = ref<{ name: string; label: string; placeholder: string; type: string }[]>([])
-const modalData = ref<{ jam: string }>({ jam: '' })
+const modalData = ref<IJam>({ jam: '', id: 0 })
+
+// Editing state
 let editingIndex: number | null = null
 let editingList: 'pagi' | 'malam' | null = null
 
-// Common submit handler (TypeScript-safe)
-function handleSubmitTime(data: { jam: string }) {
+// =======================
+// Load data from API / JSON
+// =======================
+async function loadTimeSlots() {
+  try {
+    // Example: call your API
+    // const response = await MasterDataAPI.getTimeSlots()
+    // const data = response.data as { pagi: string[]; malam: string[] }
+
+    // For dummy JSON
+    const data = DataRuang as { pagi: string[]; malam: string[] }
+
+    pagiItems.value = data.pagi.map((jam, index) => ({ jam, id: index }))
+    malamItems.value = data.malam.map((jam, index) => ({ jam, id: index }))
+  } catch (err) {
+    console.error('Failed to load time slots:', err)
+  }
+}
+
+onMounted(() => {
+  loadTimeSlots()
+})
+
+// =======================
+// Modal submit handler
+// =======================
+function handleSubmitTime(data: IJam) {
   if (!data.jam || !editingList) return
 
-  // Determine the target list safely
-  let targetList: typeof pagiItems | typeof malamItems | null = null
-  if (editingList === 'pagi') targetList = pagiItems
-  else if (editingList === 'malam') targetList = malamItems
+  const targetList = editingList === 'pagi' ? pagiItems : malamItems
 
-  if (!targetList) return // TS-safe check
-
-  if (editingIndex !== null) {
-    // Edit existing item
-    targetList.value[editingIndex] = { jam: data.jam }
+  if (editingIndex !== null && targetList.value[editingIndex]) {
+    // Edit existing safely
+    const existing = targetList.value[editingIndex]!
+    targetList.value[editingIndex] = { jam: data.jam, id: existing.id }
   } else {
-    // Add new item
-    targetList.value.push({ jam: data.jam })
+    // Add new
+    const newId = targetList.value.length ? Math.max(...targetList.value.map((i) => i.id)) + 1 : 0
+    targetList.value.push({ jam: data.jam, id: newId })
   }
 
-  // Reset modal state
   showModal.value = false
   editingIndex = null
   editingList = null
 }
 
-// === PAGI ===
+// =======================
+// CRUD handlers
+// =======================
 function handleAddPagi() {
-  editingIndex = null
-  editingList = 'pagi'
-  modalTitle.value = 'Tambah Jam Pagi'
-  modalSubmitText.value = 'Tambah'
-  modalFields.value = [
-    { name: 'jam', label: 'Jam', placeholder: 'Masukkan jam (07:50)', type: 'text' },
-  ]
-  modalData.value = { jam: '' }
-  showModal.value = true
+  handleAdd('pagi')
 }
-
-function handleEditPagi(index: number) {
-  const item = pagiItems.value[index]
-  if (!item) return // <-- this prevents TS error
-
-  editingIndex = index
-  editingList = 'pagi'
-  modalTitle.value = 'Edit Jam Pagi'
-  modalSubmitText.value = 'Simpan'
-  modalFields.value = [
-    { name: 'jam', label: 'Jam', placeholder: 'Masukkan jam (07:50)', type: 'text' },
-  ]
-  modalData.value = { jam: item.jam }
-  showModal.value = true
-}
-
-function handleDeletePagi(index: number) {
-  if (confirm('Hapus jam pagi ini?')) pagiItems.value.splice(index, 1)
-}
-
-// === MALAM ===
 function handleAddMalam() {
+  handleAdd('malam')
+}
+function handleEditPagi(index: number) {
+  handleEdit('pagi', index)
+}
+function handleEditMalam(index: number) {
+  handleEdit('malam', index)
+}
+function handleDeletePagi(index: number) {
+  handleDelete('pagi', index)
+}
+function handleDeleteMalam(index: number) {
+  handleDelete('malam', index)
+}
+
+function handleAdd(list: 'pagi' | 'malam') {
   editingIndex = null
-  editingList = 'malam'
-  modalTitle.value = 'Tambah Jam Malam'
+  editingList = list
+  modalTitle.value = `Tambah Jam ${list === 'pagi' ? 'Pagi' : 'Malam'}`
   modalSubmitText.value = 'Tambah'
   modalFields.value = [
-    { name: 'jam', label: 'Jam', placeholder: 'Masukkan jam (17:10)', type: 'text' },
+    { name: 'jam', label: 'Jam', placeholder: 'Masukkan jam (misal: 07:50)', type: 'time' },
   ]
-  modalData.value = { jam: '' }
+  modalData.value = { jam: '', id: 0 }
   showModal.value = true
 }
 
-function handleEditMalam(index: number) {
-  const item = malamItems.value[index]
-  if (!item) return // <-- this prevents TS error
+function handleEdit(list: 'pagi' | 'malam', index: number) {
+  const targetList = list === 'pagi' ? pagiItems.value : malamItems.value
+  const item = targetList[index]
+  if (!item) return
 
   editingIndex = index
-  editingList = 'malam'
-  modalTitle.value = 'Edit Jam Malam'
+  editingList = list
+  modalTitle.value = `Edit Jam ${list === 'pagi' ? 'Pagi' : 'Malam'}`
   modalSubmitText.value = 'Simpan'
   modalFields.value = [
-    { name: 'jam', label: 'Jam', placeholder: 'Masukkan jam (17:10)', type: 'text' },
+    { name: 'jam', label: 'Jam', placeholder: 'Masukkan jam (misal: 07:50)', type: 'text' },
   ]
-  modalData.value = { jam: item.jam }
+  modalData.value = { jam: item.jam, id: item.id }
   showModal.value = true
 }
 
-function handleDeleteMalam(index: number) {
-  if (confirm('Hapus jam malam ini?')) malamItems.value.splice(index, 1)
+function handleDelete(list: 'pagi' | 'malam', index: number) {
+  const targetList = list === 'pagi' ? pagiItems.value : malamItems.value
+  if (confirm('Hapus jam ini?')) targetList.splice(index, 1)
 }
 </script>
 
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-8 min-h-0 h-full">
-    <!-- === WAKTU PAGI === -->
+    <!-- Waktu Pagi -->
     <MasterDataTable
       title="Waktu Pagi"
       :columns="['Jam']"
@@ -143,7 +146,7 @@ function handleDeleteMalam(index: number) {
       @delete="handleDeletePagi"
     />
 
-    <!-- === WAKTU MALAM === -->
+    <!-- Waktu Malam -->
     <MasterDataTable
       title="Waktu Malam"
       :columns="['Jam']"

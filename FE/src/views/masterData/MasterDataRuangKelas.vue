@@ -1,49 +1,36 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import MasterDataTable from '@/components/MasterDataTable.vue'
 import MasterDataModal from '@/components/MasterDataModal.vue'
-import { ref } from 'vue'
+import MasterDataAPI from '@/services/masterDataAPI'
+import DataRuang from '@/dummy data/dataRuangKelas.json'
 
-// Dummy data for Ruang Kelas
-const ruangList = ref([
-  { kode: 'R101', nama: 'Ruang Teori 101', kapasitas: 40, lokasi: 'Gedung A - Lantai 1' },
-  { kode: 'R102', nama: 'Ruang Teori 102', kapasitas: 35, lokasi: 'Gedung A - Lantai 1' },
-  { kode: 'R201', nama: 'Lab Komputer 201', kapasitas: 25, lokasi: 'Gedung B - Lantai 2' },
-  { kode: 'R202', nama: 'Lab Jaringan 202', kapasitas: 20, lokasi: 'Gedung B - Lantai 2' },
-  { kode: 'R301', nama: 'Ruang Seminar 301', kapasitas: 60, lokasi: 'Gedung C - Lantai 3' },
-  { kode: 'R302', nama: 'Ruang Rapat 302', kapasitas: 15, lokasi: 'Gedung C - Lantai 3' },
-  { kode: 'R401', nama: 'Ruang Teori 401', kapasitas: 45, lokasi: 'Gedung D - Lantai 4' },
-  { kode: 'R402', nama: 'Ruang Multimedia 402', kapasitas: 30, lokasi: 'Gedung D - Lantai 4' },
-  { kode: 'R403', nama: 'Ruang Musik 403', kapasitas: 20, lokasi: 'Gedung D - Lantai 4' },
-  { kode: 'R501', nama: 'Lab Elektronika 501', kapasitas: 18, lokasi: 'Gedung E - Lantai 5' },
-  { kode: 'R502', nama: 'Lab Robotik 502', kapasitas: 22, lokasi: 'Gedung E - Lantai 5' },
-  { kode: 'R503', nama: 'Lab Mekatronika 503', kapasitas: 25, lokasi: 'Gedung E - Lantai 5' },
-  { kode: 'R601', nama: 'Ruang Studio 601', kapasitas: 40, lokasi: 'Gedung F - Lantai 6' },
-  { kode: 'R602', nama: 'Ruang Editing 602', kapasitas: 12, lokasi: 'Gedung F - Lantai 6' },
-  { kode: 'R603', nama: 'Ruang Broadcasting 603', kapasitas: 28, lokasi: 'Gedung F - Lantai 6' },
-])
-
-// Modal state
+// State
+const ruangList = ref<any[]>([])
 const showModal = ref(false)
 
-// Fields for the modal
+// Modal fields
 const ruangFields = [
   { name: 'kode', label: 'Kode Ruang', placeholder: 'Masukkan kode ruang', type: 'text' },
   { name: 'nama', label: 'Nama Ruang', placeholder: 'Masukkan nama ruang', type: 'text' },
-  { name: 'kapasitas', label: 'Kapasitas', placeholder: 'Masukkan kapasitas', type: 'number' },
-  { name: 'lokasi', label: 'Lokasi', placeholder: 'Masukkan lokasi', type: 'text' },
 ]
 
-// Handlers
+async function loadFromAPI() {
+  try {
+    const response = await MasterDataAPI.getAll('ruangan')
+    ruangList.value = response.data.data || response.data
+  } catch (error) {
+    console.error('Error fetching ruangan from API:', error)
+    ruangList.value = DataRuang
+  }
+}
+
+// --- Handlers ---
 const handleAddRuang = () => {
   showModal.value = true
 }
 
-const handleRuangSubmit = (data: {
-  kode: string
-  nama: string
-  kapasitas: number
-  lokasi: string
-}) => {
+async function handleRuangSubmit(data: { kode: string; nama: string }) {
   // Optional: prevent duplicate kode
   const exists = ruangList.value.some((r) => r.kode === data.kode)
   if (exists) {
@@ -51,47 +38,72 @@ const handleRuangSubmit = (data: {
     return
   }
 
-  ruangList.value.push({
-    kode: data.kode,
-    nama: data.nama,
-    kapasitas: data.kapasitas,
-    lokasi: data.lokasi,
-  })
-
-  showModal.value = false
-  alert('Ruang kelas berhasil ditambahkan!')
-}
-
-const handleEdit = (index: number) => {
-  // Optional: implement edit modal
-  console.log('Edit ruang at index:', index)
-}
-
-const handleDelete = (index: number) => {
-  if (confirm('Apakah Anda yakin ingin menghapus ruang ini?')) {
-    ruangList.value.splice(index, 1)
-    alert('Ruang kelas berhasil dihapus!')
+  try {
+    // Save via API
+    await MasterDataAPI.create('ruangan', data)
+    await loadFromAPI() // refresh table
+    showModal.value = false
+    alert('Ruang kelas berhasil ditambahkan!')
+  } catch (error) {
+    console.error('Error adding ruangan:', error)
+    alert('Gagal menambahkan ruangan. Menggunakan dummy data.')
+    // fallback to JSON
+    ruangList.value.push(data)
+    showModal.value = false
   }
 }
+
+async function handleEdit(index: number) {
+  const ruang = ruangList.value[index]
+  const newNama = prompt('Edit nama ruang:', ruang.nama)
+  if (newNama !== null) {
+    try {
+      await MasterDataAPI.update('ruangan', ruang.id || ruang.kode, { ...ruang, nama: newNama })
+      await loadFromAPI()
+      alert('Ruang berhasil diupdate!')
+    } catch (error) {
+      console.error('Error updating ruangan:', error)
+      alert('Gagal mengupdate ruangan. Mengubah dummy data saja.')
+      ruang.nama = newNama
+    }
+  }
+}
+
+async function handleDelete(index: number) {
+  const ruang = ruangList.value[index]
+  if (confirm(`Hapus ruang "${ruang.nama}"?`)) {
+    try {
+      await MasterDataAPI.delete('ruangan', ruang.id || ruang.kode)
+      await loadFromAPI()
+      alert('Ruang berhasil dihapus!')
+    } catch (error) {
+      console.error('Error deleting ruangan:', error)
+      alert('Gagal menghapus ruangan. Menghapus dummy data saja.')
+      ruangList.value.splice(index, 1)
+    }
+  }
+}
+
+// Load data on mount
+onMounted(loadFromAPI)
 </script>
 
 <template>
   <MasterDataTable
-    :columns="['Kode Ruang', 'Nama Ruang', 'Kapasitas', 'Lokasi']"
-    :dataKeys="['kode', 'nama', 'kapasitas', 'lokasi']"
-    :cellAlign="['left', 'left', 'center', 'left']"
+    :columns="['Kode Ruang', 'Nama Ruang']"
+    :dataKeys="['kode', 'nama']"
+    :cellAlign="['left', 'left']"
     :items="ruangList"
-    :searchKeys="['kode', 'nama', 'kapasitas', 'lokasi']"
-    searchPlaceholder="Cari berdasarkan kode, nama, kapasitas, atau lokasi..."
+    :searchKeys="['kode', 'nama']"
+    searchPlaceholder="Cari berdasarkan kode atau nama ruang..."
     addLabel="Ruang Kelas"
-    :columnSizes="['150px', '1fr', '200px', '200px']"
+    :columnSizes="['150px', '1fr']"
     :show-default-actions="true"
     @add="handleAddRuang"
     @edit="handleEdit"
     @delete="handleDelete"
   />
 
-  <!-- Modal -->
   <MasterDataModal
     v-model="showModal"
     title="Tambah Ruang Kelas Baru"

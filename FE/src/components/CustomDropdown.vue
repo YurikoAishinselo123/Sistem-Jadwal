@@ -1,5 +1,6 @@
 <template>
   <div class="relative" ref="dropdownRef">
+    <!-- Label -->
     <label v-if="label" class="block text-sm font-medium text-gray-700 mb-2">
       {{ label }}
       <span v-if="required" class="text-red-600 font-bold">*</span>
@@ -11,7 +12,7 @@
         ref="inputRef"
         type="text"
         :value="open ? searchTerm : modelValue"
-        @input="searchTerm = $event.target.value"
+        @input="onInput"
         @focus="open = true"
         :placeholder="placeholder"
         class="w-full px-4 py-3 pr-12 bg-white border text-sm text-black border-gray-300 rounded-lg transition-all focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
@@ -40,7 +41,7 @@
     <!-- Regular Button -->
     <button
       v-else
-      @click="open = !open"
+      @click="toggleDropdown"
       type="button"
       class="w-full px-4 py-3 bg-white border text-sm border-gray-300 rounded-lg text-left flex items-center justify-between hover:border-gray-400 transition-all focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
     >
@@ -65,7 +66,7 @@
       v-if="open"
       class="absolute z-10 w-full mt-2 text-base bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto"
     >
-      <!-- 🆕 NEW: Clear Option -->
+      <!-- Clear Option -->
       <button
         v-if="modelValue && clearable"
         @click="clearSelection"
@@ -93,54 +94,33 @@
         Tidak ditemukan
       </div>
     </div>
+
+    <!-- Inline Error Message -->
+    <p v-if="required && showError" class="text-red-500 text-xs mt-1">{{ label }} wajib diisi!</p>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
-  modelValue: {
-    type: String,
-    default: '',
-  },
-  options: {
-    type: Array,
-    required: true,
-  },
-  placeholder: {
-    type: String,
-    default: 'Select...',
-  },
-  searchable: {
-    type: Boolean,
-    default: false,
-  },
-  label: {
-    type: String,
-    default: '',
-  },
-  // 🆕 NEW PROPS
-  clearable: {
-    type: Boolean,
-    default: true,
-  },
-  clearText: {
-    type: String,
-    default: 'Kosongkan pilihan',
-  },
-  required: {
-    type: Boolean,
-    default: false,
-  },
+  modelValue: { type: String, default: '' },
+  options: { type: Array as () => string[], required: true },
+  placeholder: { type: String, default: 'Select...' },
+  searchable: { type: Boolean, default: false },
+  label: { type: String, default: '' },
+  clearable: { type: Boolean, default: true },
+  clearText: { type: String, default: 'Kosongkan pilihan' },
+  required: { type: Boolean, default: false },
+  showError: { type: Boolean, default: false }, // controlled by parent
 })
 
 const emit = defineEmits(['update:modelValue'])
 
 const open = ref(false)
 const searchTerm = ref('')
-const dropdownRef = ref(null)
-const inputRef = ref(null)
+const dropdownRef = ref<HTMLElement | null>(null)
+const inputRef = ref<HTMLInputElement | null>(null)
 
 const filteredOptions = computed(() => {
   if (!props.searchable) return props.options
@@ -149,13 +129,17 @@ const filteredOptions = computed(() => {
   )
 })
 
-const selectOption = (option) => {
+const onInput = (event: Event) => {
+  const target = event.target as HTMLInputElement | null
+  if (target) searchTerm.value = target.value
+}
+
+const selectOption = (option: string) => {
   emit('update:modelValue', option)
   open.value = false
   searchTerm.value = ''
 }
 
-// 🆕 NEW METHOD
 const clearSelection = () => {
   emit('update:modelValue', '')
   open.value = false
@@ -164,23 +148,16 @@ const clearSelection = () => {
 
 const toggleDropdown = () => {
   open.value = !open.value
-  if (open.value && inputRef.value) {
-    inputRef.value.focus()
-  }
+  if (open.value && inputRef.value) inputRef.value.focus()
 }
 
-const handleClickOutside = (event) => {
-  if (dropdownRef.value && !dropdownRef.value.contains(event.target)) {
+const handleClickOutside = (event: MouseEvent) => {
+  if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     open.value = false
     searchTerm.value = ''
   }
 }
 
-onMounted(() => {
-  document.addEventListener('mousedown', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('mousedown', handleClickOutside)
-})
+onMounted(() => document.addEventListener('mousedown', handleClickOutside))
+onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
 </script>

@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import MasterDataTable from '@/components/MasterDataTable.vue'
 import MasterDataModal from '@/components/MasterDataModal.vue'
+import MasterDataAPI from '@/services/masterDataAPI'
+import DataPeriode from '@/dummy data/dataPeriode.json'
 
 interface IPeriode {
+  id?: number | string
   namaPeriode: string
   tahun: number
   status: 'Aktif' | 'Selesai'
@@ -11,37 +14,22 @@ interface IPeriode {
   tanggalSelesai: string | null
 }
 
-// Initial periode list
-const periodeList = ref<IPeriode[]>([
-  {
-    namaPeriode: 'Gasal Pendek',
-    tahun: 2025,
-    status: 'Aktif',
-    tanggalMulai: randomDate(),
-    tanggalSelesai: null,
-  },
-  {
-    namaPeriode: 'Genap',
-    tahun: 2024,
-    status: 'Selesai',
-    tanggalMulai: randomDate(),
-    tanggalSelesai: randomDate(),
-  },
-  {
-    namaPeriode: 'Genap Pendek',
-    tahun: 2024,
-    status: 'Aktif',
-    tanggalMulai: randomDate(),
-    tanggalSelesai: null,
-  },
-])
+const periodeList = ref<IPeriode[]>([])
 
-function randomDate() {
-  const start = new Date(2023, 0, 1)
-  const end = new Date(2025, 0, 1)
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
-    .toISOString()
-    .slice(0, 10)
+async function loadPeriode() {
+  try {
+    const response = await MasterDataAPI.getAll('periode')
+    periodeList.value = (response.data.data || response.data).map((p: any) => ({
+      ...p,
+      status: p.status === 'Aktif' ? 'Aktif' : 'Selesai',
+    })) as IPeriode[]
+  } catch (error) {
+    console.warn('API failed, loading local JSON fallback', error)
+    periodeList.value = (DataPeriode as IPeriode[]).map((p) => ({
+      ...p,
+      status: p.status === 'Aktif' ? 'Aktif' : 'Selesai',
+    }))
+  }
 }
 
 // Computed table data
@@ -59,7 +47,9 @@ const tableData = computed(() =>
 const showModal = ref(false)
 const modalTitle = ref('')
 const modalSubmitText = ref('')
-const modalFields = ref<{ name: string; label: string; placeholder: string; type: string }[]>([])
+const modalFields = ref<
+  { name: string; label: string; placeholder: string; type: string; options?: string[] }[]
+>([])
 const modalData = ref<{ namaPeriode: string; tahun: number; tanggalMulai: string }>({
   namaPeriode: '',
   tahun: new Date().getFullYear(),
@@ -75,35 +65,63 @@ function handleAdd() {
       name: 'namaPeriode',
       label: 'Nama Periode',
       placeholder: 'Masukkan nama periode',
-      type: 'text',
+      type: 'select',
+      options: ['Ganjil', 'Genap', 'Ganjil Pendek', 'Genap Pendek'],
     },
     { name: 'tahun', label: 'Tahun', placeholder: 'Masukkan tahun', type: 'number' },
   ]
   modalData.value = {
     namaPeriode: '',
     tahun: new Date().getFullYear(),
-    // tanggalMulai will always be current date automatically
     tanggalMulai: new Date().toISOString().slice(0, 10),
   }
   showModal.value = true
 }
 
 // Handle modal submit
-function handleSubmitPeriode(data: { namaPeriode: string; tahun: number }) {
+async function handleSubmitPeriode(data: { namaPeriode: string; tahun: number }) {
   if (!data.namaPeriode || !data.tahun) return
 
-  periodeList.value.push({
+  const newPeriode: IPeriode = {
     namaPeriode: data.namaPeriode,
     tahun: data.tahun,
     status: 'Aktif',
-    tanggalMulai: new Date().toISOString().slice(0, 10), // use current date
+    tanggalMulai: new Date().toISOString().slice(0, 10),
     tanggalSelesai: null,
-  })
+  }
 
-  showModal.value = false
+  try {
+    await MasterDataAPI.create('periode', newPeriode)
+    await loadPeriode()
+    showModal.value = false
+    alert('Periode berhasil ditambahkan!')
+  } catch (error) {
+    console.warn('API create failed, updating local JSON only', error)
+    periodeList.value.push(newPeriode)
+    showModal.value = false
+    alert('Periode berhasil ditambahkan (lokal)!')
+  }
 }
 
 // Finish periode
+async function finishPeriode(item: IPeriode) {
+  const updated = {
+    ...item,
+    status: 'Selesai',
+    tanggalSelesai: new Date().toISOString().slice(0, 10),
+  }
+
+  try {
+    await MasterDataAPI.update('periode', item.id || item.namaPeriode, updated)
+    await loadPeriode()
+    alert('Periode berhasil ditandai selesai!')
+  } catch (error) {
+    console.warn('API update failed, updating local JSON only', error)
+    Object.assign(item, updated)
+    alert('Periode berhasil ditandai selesai (lokal)!')
+  }
+}
+
 function confirmFinish(row: any) {
   const original = periodeList.value.find(
     (p) => `${p.namaPeriode} ${p.tahun}` === row.periodeDisplay,
@@ -111,19 +129,15 @@ function confirmFinish(row: any) {
   if (!original) return
 
   const yes = confirm(
-    `Apakah Anda yakin ingin menyelesaikan periode:\n\n${original.namaPeriode} ${original.tahun}?\n\n` +
-      `Jika diselesaikan, periode ini tidak dapat diedit lagi.`,
+    `Apakah Anda yakin ingin menyelesaikan periode:\n${original.namaPeriode} ${original.tahun}?`,
   )
   if (!yes) return
 
   finishPeriode(original)
 }
 
-function finishPeriode(item: IPeriode) {
-  item.status = 'Selesai'
-  item.tanggalSelesai = new Date().toISOString().slice(0, 10)
-  alert('Periode berhasil ditandai selesai.')
-}
+// Load data when component mounts
+onMounted(loadPeriode)
 </script>
 
 <template>
