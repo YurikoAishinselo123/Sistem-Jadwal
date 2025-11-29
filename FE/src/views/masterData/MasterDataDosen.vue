@@ -11,8 +11,7 @@
     :columnSizes="['150px', '1fr']"
     :show-default-actions="true"
     addLabel="Dosen"
-  >
-  </MasterDataTable>
+  />
 
   <MasterDataModal
     v-model="showModal"
@@ -25,71 +24,84 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import MasterDataTable from '@/components/MasterDataTable.vue'
 import MasterDataModal from '@/components/MasterDataModal.vue'
+import MasterDataAPI from '@/services/masterDataAPI'
+import DataDosen from '@/dummy data/dataDosen.json'
 
-const dosenList = ref([
-  { kode: 'D001', nama: 'Dr. Suryo, S.Pd, M.Pd' },
-  { kode: 'D002', nama: 'Prof. Ahmad Dahlan, M.Kom' },
-  { kode: 'D003', nama: 'Dr. Siti Nurhaliza, S.T., M.T.' },
-  { kode: 'D004', nama: 'Ir. Budi Santoso, M.Sc' },
-  { kode: 'D005', nama: 'Dr. Rina Wijaya, S.Kom., M.Kom' },
-  { kode: 'D006', nama: 'Prof. Dr. Hendra, M.T.' },
-  { kode: 'D007', nama: 'Drs. Agus Salim, M.Pd' },
-  { kode: 'D008', nama: 'Dr. Fitri Handayani, S.Si., M.Si' },
-  { kode: 'D009', nama: 'Ir. Darmawan, M.Eng' },
-  { kode: 'D010', nama: 'Dr. Yuni Kartika, S.Pd., M.Pd' },
-  { kode: 'D011', nama: 'Prof. Rudi Hartono, Ph.D' },
-  { kode: 'D012', nama: 'Dr. Lestari, S.Kom., M.T.' },
-  { kode: 'D013', nama: 'Ir. Bambang Suryadi, M.Sc' },
-  { kode: 'D014', nama: 'Dr. Nina Karlina, S.T., M.Kom' },
-  { kode: 'D015', nama: 'Prof. Dr. Teguh Prasetyo, M.Eng' },
-  { kode: 'D016', nama: 'Dra. Indah Permata, M.Pd' },
-  { kode: 'D017', nama: 'Dr. Hadi Kusuma, S.Si., M.Si' },
-  { kode: 'D018', nama: 'Ir. Faisal Rahman, M.T.' },
-  { kode: 'D019', nama: 'Dr. Dewi Sartika, S.Kom., M.Kom' },
-  { kode: 'D020', nama: 'Prof. Wahyu Nugroho, Ph.D' },
-])
-
-const dosenFields = [
-  {
-    name: 'kode',
-    label: 'Kode Dosen',
-    placeholder: 'Masukkan kode dosen',
-    type: 'text',
-  },
-  {
-    name: 'nama',
-    label: 'Nama Dosen',
-    placeholder: 'Masukkan nama dosen',
-    type: 'text',
-  },
-]
-
+const dosenList = ref<any[]>([])
 const showModal = ref(false)
 
-function handleAdd() {
+const dosenFields = [
+  { name: 'kode', label: 'Kode Dosen', placeholder: 'Masukkan kode dosen', type: 'text' },
+  { name: 'nama', label: 'Nama Dosen', placeholder: 'Masukkan nama dosen', type: 'text' },
+]
+
+// Load data from API, fallback to local JSON
+async function loadDosen() {
+  try {
+    const response = await MasterDataAPI.getAll('dosen')
+    dosenList.value = response.data.data || response.data
+  } catch (error) {
+    console.warn('API failed, loading local JSON fallback', error)
+    dosenList.value = DataDosen
+  }
+}
+
+// Add new dosen
+async function handleDosenSubmit(data: { kode: string; nama: string }) {
+  try {
+    await MasterDataAPI.create('dosen', data)
+    await loadDosen()
+    showModal.value = false
+    alert('Dosen berhasil ditambahkan!')
+  } catch (error) {
+    console.warn('API create failed, updating local JSON only', error)
+    dosenList.value.push({ ...data })
+    showModal.value = false
+    alert('Dosen berhasil ditambahkan (lokal)!')
+  }
+}
+
+// Open modal
+const handleAdd = () => {
   showModal.value = true
 }
 
-function handleDosenSubmit(data: { kode: string; nama: string }) {
-  // Add the new dosen to the list
-  dosenList.value.push({
-    kode: data.kode,
-    nama: data.nama,
-  })
-
-  // Optional: Show success message
-  alert('Dosen berhasil ditambahkan!')
-}
-
-function handleEdit(index: number) {}
-
-function handleDelete(index: number) {
-  if (confirm('Hapus dosen ini?')) {
-    dosenList.value.splice(index, 1)
-    alert('Deleted')
+// Edit dosen
+async function handleEdit(index: number) {
+  const dosen = dosenList.value[index]
+  const newNama = prompt('Edit nama dosen:', dosen.nama)
+  if (newNama !== null) {
+    try {
+      await MasterDataAPI.update('dosen', dosen.id || dosen.kode, { ...dosen, nama: newNama })
+      await loadDosen()
+      alert('Dosen berhasil diupdate!')
+    } catch (error) {
+      console.warn('API update failed, updating local JSON only', error)
+      dosenList.value[index].nama = newNama
+      alert('Dosen berhasil diupdate (lokal)!')
+    }
   }
 }
+
+// Delete dosen
+async function handleDelete(index: number) {
+  const dosen = dosenList.value[index]
+  if (confirm(`Hapus dosen "${dosen.nama}"?`)) {
+    try {
+      await MasterDataAPI.delete('dosen', dosen.id || dosen.kode)
+      await loadDosen()
+      alert('Dosen berhasil dihapus!')
+    } catch (error) {
+      console.warn('API delete failed, removing locally', error)
+      dosenList.value.splice(index, 1)
+      alert('Dosen berhasil dihapus (lokal)!')
+    }
+  }
+}
+
+// Load data on mount
+onMounted(loadDosen)
 </script>

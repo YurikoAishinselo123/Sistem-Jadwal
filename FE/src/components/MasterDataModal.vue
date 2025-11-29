@@ -12,14 +12,32 @@
       <form @submit.prevent="handleSubmit">
         <div class="space-y-4">
           <div v-for="field in fields" :key="field.name">
-            <label class="block text-sm font-medium mb-2 text-black">
+            <label v-if="field.type !== 'select'" class="block text-sm font-medium mb-2 text-black">
               {{ field.label }}
             </label>
+
+            <!-- Select input -->
+            <CustomDropdown
+              v-if="field.type === 'select'"
+              v-model="formData[field.name]"
+              :options="field.options || []"
+              :placeholder="field.placeholder"
+              :label="field.label"
+            />
+
+            <!-- Normal input -->
             <input
+              v-else
               v-model="formData[field.name]"
               :type="field.type || 'text'"
               :placeholder="field.placeholder"
+              @input="
+                field.name === 'kode'
+                  ? (formData[field.name] = formData[field.name].toUpperCase())
+                  : null
+              "
               class="w-full px-3 py-2 text-black border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              :class="field.name === 'kode' ? 'uppercase-input' : ''"
               :required="field.required !== false"
             />
           </div>
@@ -47,6 +65,7 @@
 
 <script setup>
 import { reactive, watch } from 'vue'
+import CustomDropdown from './CustomDropdown.vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -96,3 +115,13 @@ const handleSubmit = () => {
   closeModal()
 }
 </script>
+
+<style scoped>
+.uppercase-input {
+  text-transform: uppercase; /* typed value appears uppercase */
+}
+
+.uppercase-input::placeholder {
+  text-transform: none; /* keep placeholder normal */
+}
+</style>

@@ -51,6 +51,7 @@ const tabs = [
   { id: 'makul', label: 'Daftar Makul', routeName: 'masterDataMakul' },
   { id: 'dosen', label: 'Daftar Dosen', routeName: 'masterDataDosen' },
   { id: 'laboran', label: 'Daftar Laboran', routeName: 'masterDataLaboran' },
+  { id: 'prodi', label: 'Daftar Prodi', routeName: 'masterDataProdi' },
   { id: 'ruangKelas', label: 'Daftar Ruang Kelas', routeName: 'masterDataRuangKelas' },
   {
     id: 'waktuPerkuliahan',

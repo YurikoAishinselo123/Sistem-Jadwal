@@ -1,0 +1,23 @@
+[
+  {
+    "namaPeriode": "Gasal Pendek",
+    "tahun": 2025,
+    "status": "Aktif",
+    "tanggalMulai": "2025-01-15",
+    "tanggalSelesai": null
+  },
+  {
+    "namaPeriode": "Genap",
+    "tahun": 2024,
+    "status": "Selesai",
+    "tanggalMulai": "2024-07-01",
+    "tanggalSelesai": "2024-12-15"
+  },
+  {
+    "namaPeriode": "Genap Pendek",
+    "tahun": 2024,
+    "status": "Aktif",
+    "tanggalMulai": "2024-01-05",
+    "tanggalSelesai": null
+  }
+]

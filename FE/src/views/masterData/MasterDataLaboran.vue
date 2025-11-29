@@ -9,10 +9,10 @@
     @edit="handleEdit"
     @delete="handleDelete"
     :columnSizes="['150px', '1fr']"
-    addLabel="Laboran"
     :show-default-actions="true"
-  >
-  </MasterDataTable>
+    addLabel="Laboran"
+  />
+
   <MasterDataModal
     v-model="showModal"
     title="Tambah Laboran Baru"
@@ -24,66 +24,87 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import MasterDataTable from '@/components/MasterDataTable.vue'
 import MasterDataModal from '@/components/MasterDataModal.vue'
+import MasterDataAPI from '@/services/masterDataAPI'
+import DataLaboran from '@/dummy data/dataLaboran.json'
 
-const laboranList = ref([
-  { kode: 'L001', nama: 'Bapak Arif Setiawan' },
-  { kode: 'L002', nama: 'Ibu Rina Permatasari' },
-  { kode: 'L003', nama: 'Bapak Dedi Kurniawan' },
-  { kode: 'L004', nama: 'Ibu Sinta Waluyo' },
-  { kode: 'L005', nama: 'Bapak Rafi Nugraha' },
-  { kode: 'L006', nama: 'Bapak Agus Pratama' },
-  { kode: 'L007', nama: 'Ibu Maya Lestari' },
-  { kode: 'L008', nama: 'Bapak Johan Wiratma' },
-  { kode: 'L009', nama: 'Ibu Fitri Handayani' },
-  { kode: 'L010', nama: 'Bapak Salman Hadi' },
-  { kode: 'L011', nama: 'Ibu Karina Dewi' },
-  { kode: 'L012', nama: 'Bapak Rizky Maulana' },
-  { kode: 'L013', nama: 'Ibu Ayu Paramita' },
-  { kode: 'L014', nama: 'Bapak Toni Firmansyah' },
-  { kode: 'L015', nama: 'Ibu Nabila Safitri' },
-])
-
-const laboranFields = [
-  {
-    name: 'kode',
-    label: 'Kode Laboran',
-    placeholder: 'Masukkan kode laboran',
-    type: 'text',
-  },
-  {
-    name: 'nama',
-    label: 'Nama Laboran',
-    placeholder: 'Masukkan nama laboran',
-    type: 'text',
-  },
-]
-
+const laboranList = ref<any[]>([])
 const showModal = ref(false)
 
-function handleAdd() {
+const laboranFields = [
+  { name: 'kode', label: 'Kode Laboran', placeholder: 'Masukkan kode laboran', type: 'text' },
+  { name: 'nama', label: 'Nama Laboran', placeholder: 'Masukkan nama laboran', type: 'text' },
+]
+
+// Load data from API with JSON fallback
+async function loadLaboran() {
+  try {
+    const response = await MasterDataAPI.getAll('laboran')
+    laboranList.value = response.data.data || response.data
+  } catch (error) {
+    console.warn('API failed, loading local JSON fallback', error)
+    laboranList.value = DataLaboran
+  }
+}
+
+// Add new laboran
+async function handleLaboranSubmit(data: { kode: string; nama: string }) {
+  try {
+    await MasterDataAPI.create('laboran', data)
+    await loadLaboran()
+    showModal.value = false
+    alert('Laboran berhasil ditambahkan!')
+  } catch (error) {
+    console.warn('API create failed, updating local JSON only', error)
+    laboranList.value.push({ ...data })
+    showModal.value = false
+    alert('Laboran berhasil ditambahkan (lokal)!')
+  }
+}
+
+// Open modal
+const handleAdd = () => {
   showModal.value = true
 }
 
-function handleLaboranSubmit(data: { kode: string; nama: string }) {
-  // Add the new dosen to the list
-  laboranList.value.push({
-    kode: data.kode,
-    nama: data.nama,
-  })
-
-  // Optional: Show success message
-  alert('Dosen berhasil ditambahkan!')
-}
-
-function handleEdit(index: number) {}
-
-function handleDelete(index: number) {
-  if (confirm('Hapus dosen ini?')) {
-    laboranList.value.splice(index, 1)
-    alert('Deleted')
+// Edit laboran
+async function handleEdit(index: number) {
+  const laboran = laboranList.value[index]
+  const newNama = prompt('Edit nama laboran:', laboran.nama)
+  if (newNama !== null) {
+    try {
+      await MasterDataAPI.update('laboran', laboran.id || laboran.kode, {
+        ...laboran,
+        nama: newNama,
+      })
+      await loadLaboran()
+      alert('Laboran berhasil diupdate!')
+    } catch (error) {
+      console.warn('API update failed, updating local JSON only', error)
+      laboranList.value[index].nama = newNama
+      alert('Laboran berhasil diupdate (lokal)!')
+    }
   }
 }
+
+// Delete laboran
+async function handleDelete(index: number) {
+  const laboran = laboranList.value[index]
+  if (confirm(`Hapus laboran "${laboran.nama}"?`)) {
+    try {
+      await MasterDataAPI.delete('laboran', laboran.id || laboran.kode)
+      await loadLaboran()
+      alert('Laboran berhasil dihapus!')
+    } catch (error) {
+      console.warn('API delete failed, removing locally', error)
+      laboranList.value.splice(index, 1)
+      alert('Laboran berhasil dihapus (lokal)!')
+    }
+  }
+}
+
+// Load data when component mounts
+onMounted(loadLaboran)
 </script>

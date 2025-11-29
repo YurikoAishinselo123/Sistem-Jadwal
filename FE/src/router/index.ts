@@ -14,6 +14,7 @@ import DashboardViewDetail from '@/views/dashboard/DashboardViewDetail.vue'
 import MasterDataPeriode from '@/views/masterData/MasterDataPeriode.vue'
 import LoginPage from '@/views/authentication/LoginPage.vue'
 import SignupPage from '@/views/authentication/SignupPage.vue'
+import MasterDataProdi from '@/views/masterData/MasterDataProdi.vue'
 
 const routes = [
   // Auth routes (no layout)
@@ -87,6 +88,11 @@ const routes = [
         path: 'laboran',
         name: 'masterDataLaboran',
         component: MasterDataLaboran,
+      },
+      {
+        path: 'prodi',
+        name: 'masterDataProdi',
+        component: MasterDataProdi,
       },
       {
         path: 'ruang-kelas',
