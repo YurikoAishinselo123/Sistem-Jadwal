@@ -42,13 +42,15 @@ class StoreJadwalRequest extends FormRequest
             ->where('periode_tahun_id', $this->input('periode_tahun_id'))
             ->where('hari_jadwal', $this->input('hari_jadwal'))
             ->where('waktu_mulai', $this->input('waktu_mulai'))
+            ->where('dosen_1', $this->input('dosen_1'))
             ->where('dosen_2', $this->input('dosen_1'))],
             'dosen_2'=> ['required',
             Rule::unique('jadwals','dosen_2')
             ->where('periode_tahun_id', $this->input('periode_tahun_id'))
             ->where('hari_jadwal', $this->input('hari_jadwal'))
             ->where('waktu_mulai', $this->input('waktu_mulai'))
-            ->where('dosen_1', $this->input('dosen_2'))],
+            ->where('dosen_1', $this->input('dosen_2'))
+            ->where('dosen_2', $this->input('dosen_2'))],
             'laboran_id'=> ['required',
             Rule::unique('jadwals','laboran_id')
             ->where('periode_tahun_id', $this->input('periode_tahun_id'))
