@@ -1,3 +1,149 @@
+<script setup lang="ts">
+import { reactive, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import CustomDropdown from '@/components/CustomDropdown.vue'
+
+import DataMakul from '@/dummy data/dataMakul.json'
+import DataDosen from '@/dummy data/dataDosen.json'
+import DataProdi from '@/dummy data/dataProdi.json'
+import DataLaboran from '@/dummy data/dataLaboran.json'
+import DataPeriode from '@/dummy data/dataPeriode.json'
+import DataRuangKelas from '@/dummy data/dataRuangKelas.json'
+import DataWaktuPerkuliahan from '@/dummy data/dataWaktuPerkuliahan.json'
+
+const router = useRouter()
+
+// Time slots definition
+const timeSlots = { ...DataWaktuPerkuliahan }
+
+const allTimeSlots = [...timeSlots.pagi, ...timeSlots.malam]
+
+// Form data
+const formData = reactive({
+  periodeTahunAjaran: '',
+  hari: '',
+  jenisJadwal: '',
+  waktuMulai: '',
+  waktuSelesai: '',
+  mataKuliah: '',
+  status: '',
+  programStudi: '',
+  kelas: '',
+  dosen1: '',
+  dosen2: '',
+  laboran: '',
+  ruangKelas: '',
+})
+
+// Error state
+const showError = reactive({
+  periodeTahunAjaran: false,
+  hari: false,
+  jenisJadwal: false,
+  waktuMulai: false,
+  waktuSelesai: false,
+  mataKuliah: false,
+  status: false,
+  programStudi: false,
+  kelas: false,
+  dosen1: false,
+  dosen2: false,
+  laboran: false,
+  ruangKelas: false,
+})
+
+// Determine session based on start time
+const selectedSession = computed(() => {
+  if (!formData.waktuMulai) return null
+  if (timeSlots.pagi.includes(formData.waktuMulai)) return 'pagi'
+  if (timeSlots.malam.includes(formData.waktuMulai)) return 'malam'
+  return null
+})
+
+// Available start times
+const availableStartTimes = computed(() => allTimeSlots)
+
+// Available end times based on start time
+const availableEndTimes = computed(() => {
+  if (!formData.waktuMulai) return allTimeSlots
+  const session = selectedSession.value
+  if (!session) return []
+  const sessionTimes = timeSlots[session]
+  const startIndex = sessionTimes.indexOf(formData.waktuMulai)
+  return sessionTimes.slice(startIndex + 1)
+})
+
+// Watch start time changes
+watch(
+  () => formData.waktuMulai,
+  () => {
+    if (formData.waktuSelesai && !availableEndTimes.value.includes(formData.waktuSelesai)) {
+      formData.waktuSelesai = ''
+    }
+  },
+)
+
+// Dropdown options
+const dropdownOptions = {
+  periodeTahunAjaran: DataPeriode.map((item) => `${item.namaPeriode} ${item.tahun}`),
+  hari: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'],
+  jenisJadwal: ['Jadwal Semester', 'Jadwal Ujian', 'Jadwal Pengganti'],
+  mataKuliah: DataMakul.map((item) => item.nama),
+  status: ['Online', 'Offline'],
+  programStudi: DataProdi.map((item) => item.nama),
+  kelas: ['A', 'B', 'C', 'D', 'E'],
+  dosen: DataDosen.map((item) => item.nama),
+  laboran: DataLaboran.map((item) => item.nama),
+  ruangKelas: DataRuangKelas.map((item) => item.nama),
+}
+
+// Form submission
+const handleSubmit = () => {
+  // Reset errors
+  Object.keys(showError).forEach((key) => (showError[key as keyof typeof showError] = false))
+
+  // Validate required fields
+  const requiredFields = Object.keys(showError)
+  const missingFields = requiredFields.filter((key) => !formData[key as keyof typeof formData])
+
+  if (missingFields.length > 0) {
+    missingFields.forEach((key) => (showError[key as keyof typeof showError] = true))
+    alert('Harap lengkapi semua field yang wajib diisi!')
+    return
+  }
+
+  // Validate waktuSelesai
+  if (!availableEndTimes.value.includes(formData.waktuSelesai)) {
+    showError.waktuSelesai = true
+    alert(
+      'Waktu selesai tidak valid! Pastikan lebih besar dari waktu mulai dan dalam sesi yang sama.',
+    )
+    return
+  }
+
+  // Proceed submission
+  console.log('Form submitted', formData)
+  alert('Jadwal berhasil ditambahkan!')
+  router.push({ name: 'dashboard' })
+}
+
+// Cancel
+const handleCancel = () => {
+  if (confirm('Apakah Anda yakin ingin membatalkan? Data yang diisi akan hilang.')) {
+    router.push({ name: 'dashboard' })
+  }
+}
+
+Object.keys(formData).forEach((key) => {
+  watch(
+    () => formData[key as keyof typeof formData],
+    (newValue) => {
+      if (newValue) showError[key as keyof typeof showError] = false
+    },
+  )
+})
+</script>
+
 <template>
   <div class="mb-8 mt-12 sm:mt-10 xl:mt-0">
     <h1 class="text-xl sm:text-3xl font-bold text-black">Tambah Jadwal</h1>
@@ -181,168 +327,3 @@
     </form>
   </div>
 </template>
-
-<script setup lang="ts">
-import { reactive, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import CustomDropdown from '@/components/CustomDropdown.vue'
-
-const router = useRouter()
-
-// Time slots definition
-const timeSlots = {
-  pagi: [
-    '07:50',
-    '08:40',
-    '09:30',
-    '10:20',
-    '11:10',
-    '12:00',
-    '12:50',
-    '13:40',
-    '14:30',
-    '15:20',
-    '16:10',
-    '17:00',
-  ],
-  malam: ['17:10', '18:00', '19:00', '19:35', '20:10', '20:45', '21:20', '21:55', '22:30', '23:05'],
-}
-
-const allTimeSlots = [...timeSlots.pagi, ...timeSlots.malam]
-
-// Form data
-const formData = reactive({
-  periodeTahunAjaran: '',
-  hari: '',
-  jenisJadwal: '',
-  waktuMulai: '',
-  waktuSelesai: '',
-  mataKuliah: '',
-  status: '',
-  programStudi: '',
-  kelas: '',
-  dosen1: '',
-  dosen2: '',
-  laboran: '',
-  ruangKelas: '',
-})
-
-// Error state
-const showError = reactive({
-  periodeTahunAjaran: false,
-  hari: false,
-  jenisJadwal: false,
-  waktuMulai: false,
-  waktuSelesai: false,
-  mataKuliah: false,
-  status: false,
-  programStudi: false,
-  kelas: false,
-  dosen1: false,
-  dosen2: false,
-  laboran: false,
-  ruangKelas: false,
-})
-
-// Determine session based on start time
-const selectedSession = computed(() => {
-  if (!formData.waktuMulai) return null
-  if (timeSlots.pagi.includes(formData.waktuMulai)) return 'pagi'
-  if (timeSlots.malam.includes(formData.waktuMulai)) return 'malam'
-  return null
-})
-
-// Available start times
-const availableStartTimes = computed(() => allTimeSlots)
-
-// Available end times based on start time
-const availableEndTimes = computed(() => {
-  if (!formData.waktuMulai) return allTimeSlots
-  const session = selectedSession.value
-  if (!session) return []
-  const sessionTimes = timeSlots[session]
-  const startIndex = sessionTimes.indexOf(formData.waktuMulai)
-  return sessionTimes.slice(startIndex + 1)
-})
-
-// Watch start time changes
-watch(
-  () => formData.waktuMulai,
-  () => {
-    if (formData.waktuSelesai && !availableEndTimes.value.includes(formData.waktuSelesai)) {
-      formData.waktuSelesai = ''
-    }
-  },
-)
-
-// Dropdown options
-const dropdownOptions = {
-  periodeTahunAjaran: ['Gasal 2024', 'Genap 2024', 'Gasal 2025', 'Genap 2025'],
-  hari: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'],
-  jenisJadwal: ['Jadwal Semester', 'Jadwal Ujian', 'Jadwal Pengganti'],
-  mataKuliah: [
-    'Algoritma',
-    'Pemrograman',
-    'Pengantar Teknik Perkapalan',
-    'Basis Data',
-    'Sistem Operasi',
-  ],
-  status: ['Online', 'Offline'],
-  programStudi: ['Teknik Informatika', 'Mesin A', 'Mesin B', 'Teknik Elektro'],
-  kelas: ['A', 'B', 'C', 'D', 'E'],
-  dosen: [
-    'Adhe Aryswan, S.Pd., M.Si.',
-    'Haposan Vincentius, S.T., M.Sc.',
-    'Dr. Budi Santoso, M.Kom.',
-    'Prof. Siti Rahayu, Ph.D.',
-  ],
-  laboran: ['Adhe Aryswan, S.Pd., M.Si.', 'Haposan Manalu, S.T., M.Sc.', 'Andi Wijaya, S.Kom.'],
-  ruangKelas: ['108 A', '108 B', '108 C', '201 A', '201 B', '202 A', '202 B', '301 A', '301 B'],
-}
-
-// Form submission
-const handleSubmit = () => {
-  // Reset errors
-  Object.keys(showError).forEach((key) => (showError[key as keyof typeof showError] = false))
-
-  // Validate required fields
-  const requiredFields = Object.keys(showError)
-  const missingFields = requiredFields.filter((key) => !formData[key as keyof typeof formData])
-
-  if (missingFields.length > 0) {
-    missingFields.forEach((key) => (showError[key as keyof typeof showError] = true))
-    alert('Harap lengkapi semua field yang wajib diisi!')
-    return
-  }
-
-  // Validate waktuSelesai
-  if (!availableEndTimes.value.includes(formData.waktuSelesai)) {
-    showError.waktuSelesai = true
-    alert(
-      'Waktu selesai tidak valid! Pastikan lebih besar dari waktu mulai dan dalam sesi yang sama.',
-    )
-    return
-  }
-
-  // Proceed submission
-  console.log('Form submitted', formData)
-  alert('Jadwal berhasil ditambahkan!')
-  router.push({ name: 'dashboard' })
-}
-
-// Cancel
-const handleCancel = () => {
-  if (confirm('Apakah Anda yakin ingin membatalkan? Data yang diisi akan hilang.')) {
-    router.push({ name: 'dashboard' })
-  }
-}
-
-Object.keys(formData).forEach((key) => {
-  watch(
-    () => formData[key as keyof typeof formData],
-    (newValue) => {
-      if (newValue) showError[key as keyof typeof showError] = false
-    },
-  )
-})
-</script>

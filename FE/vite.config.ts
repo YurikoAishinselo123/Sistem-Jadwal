@@ -12,4 +12,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://vtanujaya6.web.id',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })

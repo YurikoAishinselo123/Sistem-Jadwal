@@ -1,13 +1,8 @@
-import axios from 'axios'
-
-const API_BASE_URL = 'http://localhost:3000/api/auth'
+import apiClient from '@/services/apiClient'
 
 export const authenticationAPI = {
-  signup: async (data: { email: string; username: string; password: string }) => {
-    return axios.post(`${API_BASE_URL}/signup`, data)
-  },
+  signup: (data: { email: string; name: string; password: string }) =>
+    apiClient.post('register', data),
 
-  login: async (data: { username: string; password: string }) => {
-    return axios.post(`${API_BASE_URL}/login`, data)
-  },
+  login: (data: { name: string; password: string }) => apiClient.post('login', data),
 }

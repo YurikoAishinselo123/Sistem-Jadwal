@@ -1,10 +1,9 @@
-import axios from 'axios'
-const API_BASE_URL = 'http://localhost:3000/api/auth'
+import apiClient from './apiClient'
 
 export const dashboardAPI = {
-  getJadwal: () => axios.get(`${API_BASE_URL}/jadwal`),
-  getJadwalById: (id: number) => axios.get(`${API_BASE_URL}/jadwal/${id}`),
-  createJadwal: (data: any) => axios.post(`${API_BASE_URL}/jadwal`, data),
-  updateJadwal: (id: number, data: any) => axios.put(`${API_BASE_URL}/jadwal/${id}`, data),
-  deleteJadwal: (id: number) => axios.delete(`${API_BASE_URL}/jadwal/${id}`),
+  getJadwal: () => apiClient.get('/jadwal'),
+  getJadwalById: (id: number) => apiClient.get(`/jadwal/${id}`),
+  createJadwal: (data: any) => apiClient.post(`/jadwal`, data),
+  updateJadwal: (id: number, data: any) => apiClient.put(`/jadwal/${id}`, data),
+  deleteJadwal: (id: number) => apiClient.delete(`/jadwal/${id}`),
 }
