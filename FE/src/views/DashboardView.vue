@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import FilterJadwal from '@/components/FilterJadwal.vue'
 import DashboardTable from '@/components/DashboardTable.vue'
-import type { IFilterDashboard } from '@/interfaces/IFilterDashboard'
-import JadwalData from '@/dummy data/jadwalData.json'
+import type { IFilterDashboard, IJadwalResponse } from '@/interfaces/IFilterDashboard'
+import { dashboardAPI } from '@/services/dashboardAPI'
 
 // TABLE COLUMNS
 const columns = ref([
@@ -17,8 +17,14 @@ const columns = ref([
   { key: 'waktu', label: 'Waktu' },
 ])
 
-// DATA DUMMY
-const jadwalData = ref(JadwalData)
+// DATA FROM API
+const jadwalData = ref<IJadwalResponse[]>([])
+const prodiList = ref<string[]>([])
+const makulList = ref<string[]>([])
+const periodeList = ref<string[]>([])
+const laboranList = ref<string[]>([])
+const isLoading = ref(false)
+const apiError = ref('')
 
 // FILTER STATE
 const activeFilters = ref<IFilterDashboard>({
@@ -31,43 +37,172 @@ const activeFilters = ref<IFilterDashboard>({
   waktuPerkuliahan: '',
 })
 
-// FILTER OPTIONS (adjusted)
-const filterOptions = {
-  periodeTahunAjaran: [...new Set(JadwalData.map((i) => `${i.namaPeriode} ${i.tahunPeriode}`))],
-  hari: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
-  programStudi: ['Teknik Informatika', 'Mesin A', 'Mesin B'],
-  mataKuliah: [...new Set(JadwalData.map((i) => i.mataKuliah))],
-  jenisJadwal: ['Jadwal Semester', 'Jadwal Pengganti', 'Jadwal Ujian'],
-  laboran: [...new Set(JadwalData.map((i) => i.laboran))],
-  waktuPerkuliahan: [...new Set(JadwalData.map((i) => `${i.waktuMulai} - ${i.waktuSelesai}`))],
+// STATIC OPTIONS
+const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+const JENIS_JADWAL = ['Jadwal Semester', 'Jadwal Pengganti', 'Jadwal Ujian']
+const SESI_PERKULIAHAN = ['Sesi Pagi', 'Sesi Malam']
+
+// Helper function to safely extract array data
+const extractArrayData = (response: any): any[] => {
+  if (Array.isArray(response)) return response
+  if (Array.isArray(response?.data)) return response.data
+  return []
+}
+
+// Helper function to create unique set from array
+const getUniqueValues = (arr: any[], key: string): string[] => {
+  return [...new Set(arr.map((item) => item[key]).filter(Boolean))]
+}
+
+// Helper function to determine session (Pagi/Malam) based on start time
+const getSesiFromTime = (waktuMulai?: string): string => {
+  if (!waktuMulai) return ''
+
+  const [jam] = waktuMulai.split(':')
+  const hour = parseInt(jam ?? '0')
+
+  return hour < 17 ? 'Sesi Pagi' : 'Sesi Malam'
+}
+
+// DYNAMIC FILTER OPTIONS - computed from API data
+const filterOptions = computed(() => {
+  if (jadwalData.value.length === 0) {
+    return {
+      periodeTahunAjaran: periodeList.value,
+      hari: DAYS,
+      programStudi: prodiList.value,
+      mataKuliah: makulList.value,
+      jenisJadwal: JENIS_JADWAL,
+      laboran: laboranList.value,
+      waktuPerkuliahan: SESI_PERKULIAHAN,
+    }
+  }
+
+  // Extract unique periods from jadwal data
+  const periods = getUniqueValues(
+    jadwalData.value.filter((i) => i.nama_periode),
+    'periodeTahunAjaran',
+  )
+
+  return {
+    periodeTahunAjaran: periods.length > 0 ? periods : periodeList.value,
+    hari: getUniqueValues(jadwalData.value, 'hari_jadwal'),
+    programStudi: prodiList.value,
+    mataKuliah: makulList.value,
+    jenisJadwal: JENIS_JADWAL,
+    laboran: laboranList.value,
+    waktuPerkuliahan: SESI_PERKULIAHAN,
+  }
+})
+
+// Fetch all filter data in parallel
+const fetchFilterData = async () => {
+  try {
+    const [laboranRes, prodiRes, makulRes, periodeRes] = await Promise.all([
+      dashboardAPI.getLaboran().catch((err) => {
+        console.error('Error fetching laboran:', err)
+        return { data: [] }
+      }),
+      dashboardAPI.getProdi().catch((err) => {
+        console.error('Error fetching prodi:', err)
+        return { data: [] }
+      }),
+      dashboardAPI.getMakul().catch((err) => {
+        console.error('Error fetching makul:', err)
+        return { data: [] }
+      }),
+      dashboardAPI.getPeriode().catch((err) => {
+        console.error('Error fetching periode:', err)
+        return { data: [] }
+      }),
+    ])
+
+    laboranList.value = extractArrayData(laboranRes).map((item) => item.nama_laboran)
+    prodiList.value = extractArrayData(prodiRes).map((item) => item.nama_prodi)
+    makulList.value = extractArrayData(makulRes).map((item) => item.nama_makul)
+    periodeList.value = extractArrayData(periodeRes).map((item) => `${item.periode}`)
+  } catch (error) {
+    console.error('Error fetching filter data:', error)
+  }
+}
+
+// FETCH JADWAL DATA FROM API
+const fetchJadwalData = async () => {
+  isLoading.value = true
+  apiError.value = ''
+
+  try {
+    const response = await dashboardAPI.getJadwal()
+
+    jadwalData.value = extractArrayData(response)
+
+    if (jadwalData.value.length === 0) {
+      console.warn('No jadwal data received from API')
+    }
+  } catch (error: any) {
+    console.error('Error fetching jadwal:', error)
+
+    if (error.response?.status === 401) {
+      apiError.value = 'Sesi Anda telah berakhir. Silakan login kembali'
+    } else if (error.response?.status === 500) {
+      apiError.value = 'Terjadi kesalahan pada server'
+    } else {
+      apiError.value = error.message || 'Gagal memuat data jadwal'
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Format single jadwal item for display
+const formatJadwalItem = (item: any) => {
+  const dosenList = [item.nama_dosen_1, item.nama_dosen_2].filter(Boolean).join('\n') || '-'
+
+  const ruangKelas =
+    item.status === 'Online' || !item.kode_ruangan
+      ? '-'
+      : `${item.kode_ruangan}${item.kelas ? ' ' + item.kelas : ''}`
+
+  const waktu =
+    item.waktu_mulai && item.waktu_selesai ? `${item.waktu_mulai} - ${item.waktu_selesai}` : '-'
+
+  const periodeTahunAjaran =
+    item.nama_periode && item.tahun_periode ? `${item.nama_periode} ${item.tahun_periode}` : ''
+
+  // Determine session based on start time
+  const sesi = getSesiFromTime(item.waktu_mulai ?? '')
+
+  return {
+    ...item,
+    hari: item.hari_jadwal || '-',
+    programStudi: item.nama_prodi || '-',
+    mataKuliah: item.nama_makul || '-',
+    dosen: dosenList,
+    laboran: item.nama_laboran || '-',
+    ruang: ruangKelas,
+    waktu,
+    sesi, // Add sesi field for filtering
+    periodeTahunAjaran,
+    jenisJadwal: item.jenis_jadwal || 'Jadwal Semester',
+  }
 }
 
 // COMPUTED - FILTERED DATA + FORMATTING
 const filteredData = computed(() => {
-  let result = jadwalData.value.map((item) => ({
-    ...item,
-
-    periodeTahunAjaran: `${item.namaPeriode} ${item.tahunPeriode}`,
-
-    dosen: `${item.dosen1}, ${item.dosen2}`,
-
-    ruang: item.status === 'online' || !item.ruang ? '-' : `${item.ruang} ${item.kelas}`,
-
-    waktu: `${item.waktuMulai} - ${item.waktuSelesai}`,
-  }))
-
+  const formatted = jadwalData.value.map(formatJadwalItem)
   const f = activeFilters.value
 
-  if (f.periodeTahunAjaran)
-    result = result.filter((i) => i.periodeTahunAjaran === f.periodeTahunAjaran)
-  if (f.hari) result = result.filter((i) => i.hari === f.hari)
-  if (f.programStudi) result = result.filter((i) => i.programStudi === f.programStudi)
-  if (f.mataKuliah) result = result.filter((i) => i.mataKuliah === f.mataKuliah)
-  if (f.jenisJadwal) result = result.filter((i) => i.jenisJadwal === f.jenisJadwal)
-  if (f.laboran) result = result.filter((i) => i.laboran === f.laboran)
-  if (f.waktuPerkuliahan) result = result.filter((i) => i.waktu === f.waktuPerkuliahan)
-
-  return result
+  return formatted.filter((item) => {
+    if (f.periodeTahunAjaran && item.periodeTahunAjaran !== f.periodeTahunAjaran) return false
+    if (f.hari && item.hari !== f.hari) return false
+    if (f.programStudi && item.programStudi !== f.programStudi) return false
+    if (f.mataKuliah && item.mataKuliah !== f.mataKuliah) return false
+    if (f.jenisJadwal && item.jenisJadwal !== f.jenisJadwal) return false
+    if (f.laboran && item.laboran !== f.laboran) return false
+    // Filter by session (Sesi Pagi/Malam)
+    if (f.waktuPerkuliahan && item.sesi !== f.waktuPerkuliahan) return false
+    return true
+  })
 })
 
 // HANDLERS
@@ -91,44 +226,93 @@ const handleReset = () => {
 }
 
 const handleEdit = (row: any) => {
+  console.log('Edit row:', row)
   alert(`Edit jadwal: ${row.mataKuliah}`)
 }
 
-const handleDelete = (row: any) => {
-  if (confirm(`Hapus jadwal ${row.mataKuliah}?`)) {
-    const index = jadwalData.value.findIndex((item) => item === row)
-    if (index >= 0) jadwalData.value.splice(index, 1)
+const handleDelete = async (row: any) => {
+  if (!confirm(`Hapus jadwal ${row.mataKuliah}?`)) return
+
+  try {
+    await dashboardAPI.deleteJadwal(row.id)
     alert('Jadwal berhasil dihapus!')
+    // Refresh data after delete
+    await Promise.all([fetchJadwalData(), fetchFilterData()])
+  } catch (error: any) {
+    console.error('Error deleting jadwal:', error)
+    alert('Gagal menghapus jadwal. ' + (error.message || ''))
   }
 }
 
-const handlePrint = () => window.print()
+const handlePrint = () => {
+  window.print()
+}
+
+// FETCH DATA ON MOUNT
+onMounted(async () => {
+  await Promise.all([fetchJadwalData(), fetchFilterData()])
+})
 </script>
 
 <template>
-  <p class="text-4xl font-bold text-black">Dashboard Jadwal Perkuliahan</p>
-  <p class="text-xl font-base text-black mb-8">Monitor dan kelola perkuliahan kampus</p>
-  <FilterJadwal
-    :options="filterOptions"
-    @filter-change="handleFilterChange"
-    @reset="handleReset"
-    class="shadow-lg mb-6"
-  />
+  <div>
+    <p class="text-4xl font-bold text-black">Dashboard Jadwal Perkuliahan</p>
+    <p class="text-xl font-base text-black mb-8">Monitor dan kelola perkuliahan kampus</p>
 
-  <!-- Table with merged header -->
-  <DashboardTable
-    :columns="columns"
-    :data="filteredData"
-    :has-actions="true"
-    @edit="handleEdit"
-    @delete="handleDelete"
-    @print="handlePrint"
-  >
-  </DashboardTable>
+    <!-- API Error Message -->
+    <div
+      v-if="apiError"
+      class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center justify-between"
+    >
+      <span>{{ apiError }}</span>
+      <button
+        @click="fetchJadwalData"
+        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-xs font-medium"
+      >
+        Coba Lagi
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div
+      v-if="isLoading"
+      class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm"
+    >
+      Memuat data jadwal...
+    </div>
+
+    <!-- Filter Component -->
+    <FilterJadwal
+      v-if="!isLoading"
+      :options="filterOptions"
+      @filter-change="handleFilterChange"
+      @reset="handleReset"
+      class="shadow-lg mb-6"
+    />
+
+    <!-- Table -->
+    <DashboardTable
+      v-if="!isLoading && !apiError"
+      :columns="columns"
+      :data="filteredData"
+      :has-actions="true"
+      @edit="handleEdit"
+      @delete="handleDelete"
+      @print="handlePrint"
+    />
+
+    <!-- Empty State -->
+    <!-- <div
+      v-if="!isLoading && !apiError && filteredData.length === 0"
+      class="p-8 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300"
+    >
+      <p class="text-gray-500 text-lg">Tidak ada data jadwal yang tersedia</p>
+      <p class="text-gray-400 text-sm mt-2">Coba ubah filter atau tambahkan jadwal baru</p>
+    </div> -->
+  </div>
 </template>
 
 <style scoped>
-/* Add any custom styles here */
 @media print {
   .no-print {
     display: none;

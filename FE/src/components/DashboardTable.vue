@@ -90,9 +90,8 @@
               </template>
 
               <template v-else-if="column.key === 'dosen'">
-                <div class="flex flex-col">
-                  <span>{{ formatDosen(row.dosen1 || row.dosen) }}</span>
-                  <span v-if="row.dosen2">{{ formatDosen(row.dosen2) }}</span>
+                <div class="flex flex-col gap-1">
+                  <span class="whitespace-pre-line">{{ row.dosen }}</span>
                 </div>
               </template>
 
