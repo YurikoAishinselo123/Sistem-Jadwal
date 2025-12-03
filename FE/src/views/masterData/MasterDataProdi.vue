@@ -1,34 +1,11 @@
-<template>
-  <MasterDataTable
-    :columns="['Kode Prodi', 'Nama Prodi']"
-    :dataKeys="['kode', 'nama']"
-    :items="prodiList"
-    :searchKeys="['kode', 'nama']"
-    :searchPlaceholder="'Cari berdasarkan kode atau nama prodi...'"
-    @add="handleAdd"
-    @edit="handleEdit"
-    @delete="handleDelete"
-    :columnSizes="['150px', '1fr']"
-    :show-default-actions="true"
-    addLabel="Prodi"
-  />
-
-  <MasterDataModal
-    v-model="showModal"
-    title="Tambah Prodi Baru"
-    subtitle="Masukkan informasi prodi di bawah ini"
-    :fields="prodiFields"
-    submit-text="Tambah"
-    @submit="handleProdiSubmit"
-  />
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import MasterDataTable from '@/components/MasterDataTable.vue'
 import MasterDataModal from '@/components/MasterDataModal.vue'
 import MasterDataAPI from '@/services/masterDataAPI'
-import DataProdi from '@/dummy data/dataProdi.json'
+import { useToast } from '@/composables/UseToast'
+
+const { success, error } = useToast()
 
 const prodiList = ref<any[]>([])
 const showModal = ref(false)
@@ -38,30 +15,35 @@ const prodiFields = [
   { name: 'nama', label: 'Nama Prodi', placeholder: 'Masukkan nama prodi', type: 'text' },
 ]
 
-// Load data from API, fallback to local JSON if API fails
 async function loadProdi() {
   try {
     const response = await MasterDataAPI.getAll('prodi')
-    // check if response contains data
-    prodiList.value = response.data.data || response.data
-  } catch (error) {
-    console.warn('API failed, loading local JSON fallback', error)
-    prodiList.value = DataProdi
+    const data = response.data
+    prodiList.value = data.map((item: any) => ({
+      id: item.id,
+      kode: item.kode_prodi,
+      nama: item.nama_prodi,
+    }))
+  } catch (err) {
+    error('Gagal memuat data mata kuliah')
   }
 }
 
 // Add new prodi
 async function handleProdiSubmit(data: { kode: string; nama: string }) {
   try {
-    await MasterDataAPI.create('prodi', data)
+    const payload = {
+      kode_prodi: data.kode,
+      nama_prodi: data.nama,
+    }
+
+    await MasterDataAPI.create('prodi', payload)
     await loadProdi()
     showModal.value = false
-    alert('Prodi berhasil ditambahkan!')
-  } catch (error) {
-    console.warn('API create failed, updating local JSON only', error)
-    prodiList.value.push({ ...data })
-    showModal.value = false
-    alert('Prodi berhasil ditambahkan (lokal)!')
+
+    success('Mata Kuliah berhasil ditambahkan!')
+  } catch (err) {
+    error('Gagal menambahkan mata kuliah')
   }
 }
 
@@ -94,11 +76,10 @@ async function handleDelete(index: number) {
     try {
       await MasterDataAPI.delete('prodi', prodi.id || prodi.kode)
       await loadProdi()
-      alert('Prodi berhasil dihapus!')
-    } catch (error) {
-      console.warn('API delete failed, removing locally', error)
-      prodiList.value.splice(index, 1)
-      alert('Prodi berhasil dihapus (lokal)!')
+
+      success('Mata Kuliah berhasil dihapus!')
+    } catch (err) {
+      error('Gagal menghapus mata kuliah')
     }
   }
 }
@@ -106,3 +87,28 @@ async function handleDelete(index: number) {
 // Load data when component mounts
 onMounted(loadProdi)
 </script>
+
+<template>
+  <MasterDataTable
+    :columns="['Kode Prodi', 'Nama Prodi']"
+    :dataKeys="['kode', 'nama']"
+    :items="prodiList"
+    :searchKeys="['kode', 'nama']"
+    :searchPlaceholder="'Cari berdasarkan kode atau nama prodi...'"
+    @add="handleAdd"
+    @edit="handleEdit"
+    @delete="handleDelete"
+    :columnSizes="['150px', '1fr']"
+    :show-default-actions="true"
+    addLabel="Prodi"
+  />
+
+  <MasterDataModal
+    v-model="showModal"
+    title="Tambah Prodi Baru"
+    subtitle="Masukkan informasi prodi di bawah ini"
+    :fields="prodiFields"
+    submit-text="Tambah"
+    @submit="handleProdiSubmit"
+  />
+</template>

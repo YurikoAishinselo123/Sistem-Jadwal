@@ -1,25 +1,23 @@
-import axios from 'axios'
-
-const API_URL = 'http://localhost:8000/api' // adjust to your backend URL
+import apiClient from './apiClient'
 
 export default class MasterDataAPI {
   static async getAll(resource: string) {
-    return axios.get(`${API_URL}/${resource}`)
+    return apiClient.get(`/${resource}`)
   }
 
   static async getById(resource: string, id: number | string) {
-    return axios.get(`${API_URL}/${resource}/${id}`)
+    return apiClient.get(`/${resource}/${id}`)
   }
 
   static async create(resource: string, payload: any) {
-    return axios.post(`${API_URL}/${resource}`, payload)
+    return apiClient.post(`/${resource}`, payload)
   }
 
   static async update(resource: string, id: number | string, payload: any) {
-    return axios.put(`${API_URL}/${resource}/${id}`, payload)
+    return apiClient.put(`/${resource}/${id}`, payload)
   }
 
   static async delete(resource: string, id: number | string) {
-    return axios.delete(`${API_URL}/${resource}/${id}`)
+    return apiClient.delete(`/${resource}/${id}`)
   }
 }
