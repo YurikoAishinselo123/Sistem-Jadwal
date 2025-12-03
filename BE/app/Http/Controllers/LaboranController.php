@@ -30,6 +30,7 @@ class LaboranController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $fields=$request->validate([
+            'kode_laboran' => 'required',
             'nama_laboran' => 'required'        
         ]);//
 

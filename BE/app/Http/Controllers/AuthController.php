@@ -15,19 +15,17 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
         $user = User::create($field);
-        $token = $user->createToken($request->name);
         return [
-            'user' =>$user,
-            'token' => $token->plainTextToken
+            'user' =>$user
         ];
     }//
     public function login(Request $request){
         $request->validate([
-            'email' => 'required|email|exists:users',
+            'name' => 'required|exists:users',
             'password' => 'required'
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('name', $request->name)->first();
 
         if (!$user||!Hash::check($request->password, $user->password)){
             return [

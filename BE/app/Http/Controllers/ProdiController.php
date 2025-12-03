@@ -21,7 +21,7 @@ class ProdiController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        Prodi::all();//
+        return Prodi::all();//
     }
 
     /**
@@ -30,6 +30,7 @@ class ProdiController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $fields=$request->validate([
+            'kode_prodi' => 'required',
             'nama_prodi' => 'required'        
         ]);//
 
@@ -52,7 +53,8 @@ class ProdiController extends Controller implements HasMiddleware
     public function update(Request $request, Prodi $prodi)
     {
         $fields=$request->validate([
-            'nama_prodi' => 'required'        
+            'kode_prodi' => 'required',
+            'nama_prodi' => 'required'
         ]);//
 
         $prodi->Prodi::update($fields);

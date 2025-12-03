@@ -15,8 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('kode_makul');
             $table->string('nama_makul');
-            $table->integer('sks_teori_makul');
-            $table->integer('sks_praktik_makul');
             $table->timestamps();
         });
     }

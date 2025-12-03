@@ -11,8 +11,8 @@ class Ruangan extends Model
     /** @use HasFactory<\Database\Factories\RuanganFactory> */
     use HasFactory;
         protected $fillable = [
-        'nama_ruangan',
-        'jenis_ruangan'
+        'kode_ruangan',
+        'nama_ruangan'
     ];
     
     public function jadwal():HasMany{
