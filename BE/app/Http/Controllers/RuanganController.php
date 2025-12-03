@@ -21,7 +21,7 @@ class RuanganController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        Ruangan::all();//
+        return Ruangan::all();//
     }
 
     /**

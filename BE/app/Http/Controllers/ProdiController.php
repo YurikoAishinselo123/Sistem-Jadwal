@@ -21,7 +21,7 @@ class ProdiController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        Prodi::all();//
+        return Prodi::all();//
     }
 
     /**

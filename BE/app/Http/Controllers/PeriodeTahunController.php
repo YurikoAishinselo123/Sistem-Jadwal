@@ -21,7 +21,7 @@ class PeriodeTahunController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        return PeriodeTahun::all();//
+        return PeriodeTahun::orderBy('tanggal_mulai')->get();
     }
 
     /**

@@ -54,9 +54,7 @@ class MakulController extends Controller implements HasMiddleware
     {
         $fields=$request->validate([
             'kode_makul' => 'required',
-            'nama_makul' => 'required',
-            'sks_teori_makul' => 'required',
-            'sks_praktik_makul' => 'required'
+            'nama_makul' => 'required'
         ]);//
 
         $makul->Makul::update($fields);
