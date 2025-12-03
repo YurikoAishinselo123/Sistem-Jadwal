@@ -2,98 +2,112 @@
 import { ref, onMounted } from 'vue'
 import MasterDataTable from '@/components/MasterDataTable.vue'
 import MasterDataModal from '@/components/MasterDataModal.vue'
-import DataRuang from '@/dummy data/dataWaktuPerkuliahan.json'
 import MasterDataAPI from '@/services/masterDataAPI'
+import { useToast } from '@/composables/UseToast'
 
-// Type for a single jam
+const { success, error } = useToast()
+
 interface IJam {
   jam: string
   id: number
 }
 
-// Reactive lists
 const pagiItems = ref<IJam[]>([])
 const malamItems = ref<IJam[]>([])
 
-// Modal state
 const showModal = ref(false)
 const modalTitle = ref('')
 const modalSubmitText = ref('')
 const modalFields = ref<{ name: string; label: string; placeholder: string; type: string }[]>([])
 const modalData = ref<IJam>({ jam: '', id: 0 })
 
-// Editing state
 let editingIndex: number | null = null
 let editingList: 'pagi' | 'malam' | null = null
 
 // =======================
-// Load data from API / JSON
+// Load data from API
 // =======================
 async function loadTimeSlots() {
   try {
-    // Example: call your API
-    // const response = await MasterDataAPI.getTimeSlots()
-    // const data = response.data as { pagi: string[]; malam: string[] }
+    const response = await MasterDataAPI.getAll('waktu')
+    const data = response.data
 
-    // For dummy JSON
-    const data = DataRuang as { pagi: string[]; malam: string[] }
+    pagiItems.value = data.pagi.map((jam: string, index: number) => ({ jam, id: index }))
+    malamItems.value = data.malam.map((jam: string, index: number) => ({ jam, id: index }))
 
-    pagiItems.value = data.pagi.map((jam, index) => ({ jam, id: index }))
-    malamItems.value = data.malam.map((jam, index) => ({ jam, id: index }))
+    success('Data waktu berhasil dimuat!')
   } catch (err) {
-    console.error('Failed to load time slots:', err)
+    error('Gagal memuat data waktu!')
   }
 }
 
-onMounted(() => {
-  loadTimeSlots()
-})
+onMounted(loadTimeSlots)
 
 // =======================
-// Modal submit handler
+// Submit (Create / Edit)
 // =======================
-function handleSubmitTime(data: IJam) {
+async function handleSubmitTime(data: IJam) {
   if (!data.jam || !editingList) return
 
   const targetList = editingList === 'pagi' ? pagiItems : malamItems
 
-  if (editingIndex !== null && targetList.value[editingIndex]) {
-    // Edit existing safely
-    const existing = targetList.value[editingIndex]!
-    targetList.value[editingIndex] = { jam: data.jam, id: existing.id }
-  } else {
-    // Add new
-    const newId = targetList.value.length ? Math.max(...targetList.value.map((i) => i.id)) + 1 : 0
-    targetList.value.push({ jam: data.jam, id: newId })
+  try {
+    if (editingIndex !== null) {
+      const item = targetList.value[editingIndex]
+
+      if (!item) {
+        error('Data tidak ditemukan')
+        return
+      }
+
+      await MasterDataAPI.update('waktu', item.id, {
+        jam: data.jam,
+        jenis: editingList,
+      })
+
+      success('Jam berhasil diperbarui!')
+    } else {
+      await MasterDataAPI.create('waktu', {
+        jam: data.jam,
+        jenis: editingList,
+      })
+
+      success('Jam berhasil ditambahkan!')
+    }
+
+    await loadTimeSlots()
+    showModal.value = false
+  } catch (err) {
+    error('Terjadi kesalahan pada server')
   }
 
-  showModal.value = false
   editingIndex = null
   editingList = null
 }
 
 // =======================
-// CRUD handlers
+// Delete
 // =======================
-function handleAddPagi() {
-  handleAdd('pagi')
-}
-function handleAddMalam() {
-  handleAdd('malam')
-}
-function handleEditPagi(index: number) {
-  handleEdit('pagi', index)
-}
-function handleEditMalam(index: number) {
-  handleEdit('malam', index)
-}
-function handleDeletePagi(index: number) {
-  handleDelete('pagi', index)
-}
-function handleDeleteMalam(index: number) {
-  handleDelete('malam', index)
+async function handleDelete(list: 'pagi' | 'malam', index: number) {
+  const targetList = list === 'pagi' ? pagiItems.value : malamItems.value
+  const item = targetList[index]
+
+  if (!item) return error('Data tidak ditemukan')
+
+  if (confirm(`Hapus jam ${item.jam}?`)) {
+    try {
+      await MasterDataAPI.delete('waktu', item.id)
+      await loadTimeSlots()
+      success('Jam berhasil dihapus!')
+    } catch (err) {
+      error('Gagal menghapus jam!')
+    }
+  }
 }
 
+// =======================
+// Modal control
+// =======================
 function handleAdd(list: 'pagi' | 'malam') {
   editingIndex = null
   editingList = list
@@ -116,21 +130,23 @@ function handleEdit(list: 'pagi' | 'malam', index: number) {
   modalTitle.value = `Edit Jam ${list === 'pagi' ? 'Pagi' : 'Malam'}`
   modalSubmitText.value = 'Simpan'
   modalFields.value = [
-    { name: 'jam', label: 'Jam', placeholder: 'Masukkan jam (misal: 07:50)', type: 'text' },
+    { name: 'jam', label: 'Jam', placeholder: 'Masukkan jam (misal: 07:50)', type: 'time' },
   ]
   modalData.value = { jam: item.jam, id: item.id }
   showModal.value = true
 }
 
-function handleDelete(list: 'pagi' | 'malam', index: number) {
-  const targetList = list === 'pagi' ? pagiItems.value : malamItems.value
-  if (confirm('Hapus jam ini?')) targetList.splice(index, 1)
-}
+// Button handler shortcuts
+const handleAddPagi = () => handleAdd('pagi')
+const handleAddMalam = () => handleAdd('malam')
+const handleEditPagi = (i: number) => handleEdit('pagi', i)
+const handleEditMalam = (i: number) => handleEdit('malam', i)
+const handleDeletePagi = (i: number) => handleDelete('pagi', i)
+const handleDeleteMalam = (i: number) => handleDelete('malam', i)
 </script>
 
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-8 min-h-0 h-full">
-    <!-- Waktu Pagi -->
     <MasterDataTable
       title="Waktu Pagi"
       :columns="['Jam']"
@@ -138,7 +154,7 @@ function handleDelete(list: 'pagi' | 'malam', index: number) {
       :items="pagiItems"
       :searchKeys="['jam']"
       searchPlaceholder="Cari jam pagi..."
-      addLabel="Waktu Pagi"
+      addLabel="Jam Pagi"
       :columnSizes="['1fr']"
       :show-default-actions="true"
       @add="handleAddPagi"
@@ -146,7 +162,6 @@ function handleDelete(list: 'pagi' | 'malam', index: number) {
       @delete="handleDeletePagi"
     />
 
-    <!-- Waktu Malam -->
     <MasterDataTable
       title="Waktu Malam"
       :columns="['Jam']"
@@ -154,7 +169,7 @@ function handleDelete(list: 'pagi' | 'malam', index: number) {
       :items="malamItems"
       :searchKeys="['jam']"
       searchPlaceholder="Cari jam malam..."
-      addLabel="Waktu Malam"
+      addLabel="Jam Malam"
       :columnSizes="['1fr']"
       :show-default-actions="true"
       @add="handleAddMalam"
@@ -163,7 +178,6 @@ function handleDelete(list: 'pagi' | 'malam', index: number) {
     />
   </div>
 
-  <!-- Modal -->
   <MasterDataModal
     v-model="showModal"
     :title="modalTitle"

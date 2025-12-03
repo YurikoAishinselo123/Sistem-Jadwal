@@ -37,6 +37,13 @@
         <router-view />
       </div>
     </main>
+    <!-- Toast Notification -->
+    <ToastNotification
+      :show="toastState.show"
+      :type="toastState.type"
+      :message="toastState.message"
+      @close="hideToast"
+    />
   </div>
 </template>
 
@@ -44,8 +51,11 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
+import ToastNotification from '@/components/ToastNotification.vue'
+import { useToast } from '@/composables/UseToast'
 
 const route = useRoute()
+const { toastState, hideToast } = useToast()
 
 const tabs = [
   { id: 'makul', label: 'Daftar Makul', routeName: 'masterDataMakul' },

@@ -3,7 +3,9 @@ import { ref, onMounted } from 'vue'
 import MasterDataTable from '@/components/MasterDataTable.vue'
 import MasterDataModal from '@/components/MasterDataModal.vue'
 import MasterDataAPI from '@/services/masterDataAPI'
-import DataRuang from '@/dummy data/dataRuangKelas.json'
+import { useToast } from '@/composables/UseToast'
+
+const { success, error } = useToast()
 
 // State
 const ruangList = ref<any[]>([])
@@ -18,10 +20,15 @@ const ruangFields = [
 async function loadFromAPI() {
   try {
     const response = await MasterDataAPI.getAll('ruangan')
-    ruangList.value = response.data.data || response.data
-  } catch (error) {
-    console.error('Error fetching ruangan from API:', error)
-    ruangList.value = DataRuang
+    const data = response.data
+
+    ruangList.value = data.map((item: any) => ({
+      id: item.id,
+      kode: item.kode_ruangan,
+      nama: item.nama_ruangan,
+    }))
+  } catch (err) {
+    error('Gagal memuat data mata kuliah')
   }
 }
 
@@ -31,25 +38,19 @@ const handleAddRuang = () => {
 }
 
 async function handleRuangSubmit(data: { kode: string; nama: string }) {
-  // Optional: prevent duplicate kode
-  const exists = ruangList.value.some((r) => r.kode === data.kode)
-  if (exists) {
-    alert('Kode ruang sudah ada!')
-    return
-  }
-
   try {
-    // Save via API
-    await MasterDataAPI.create('ruangan', data)
-    await loadFromAPI() // refresh table
+    const payload = {
+      kode_ruangan: data.kode,
+      nama_ruangan: data.nama,
+    }
+
+    await MasterDataAPI.create('ruangan', payload)
+    await loadFromAPI()
     showModal.value = false
-    alert('Ruang kelas berhasil ditambahkan!')
-  } catch (error) {
-    console.error('Error adding ruangan:', error)
-    alert('Gagal menambahkan ruangan. Menggunakan dummy data.')
-    // fallback to JSON
-    ruangList.value.push(data)
-    showModal.value = false
+
+    success('Mata Kuliah berhasil ditambahkan!')
+  } catch (err) {
+    error('Gagal menambahkan mata kuliah')
   }
 }
 
@@ -75,11 +76,9 @@ async function handleDelete(index: number) {
     try {
       await MasterDataAPI.delete('ruangan', ruang.id || ruang.kode)
       await loadFromAPI()
-      alert('Ruang berhasil dihapus!')
-    } catch (error) {
-      console.error('Error deleting ruangan:', error)
-      alert('Gagal menghapus ruangan. Menghapus dummy data saja.')
-      ruangList.value.splice(index, 1)
+      success('Mata Kuliah berhasil dihapus!')
+    } catch (err) {
+      error('Gagal menghapus mata kuliah')
     }
   }
 }
