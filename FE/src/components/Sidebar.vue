@@ -57,7 +57,7 @@ const handleLogout = () => {
 
 <template>
   <!-- DESKTOP SIDEBAR -->
-  <nav class="hidden xl:flex flex-col h-full bg-white w-64 border-r border-gray-200">
+  <nav class="hidden xl:flex flex-col h-full bg-white w-64 border-r border-gray-200 relative z-50">
     <!-- Logo -->
     <div class="mb-2 flex items-center w-full p-4 mt-3">
       <img :src="logo" alt="Logo" class="h-10 w-auto mr-3 ml-1" />

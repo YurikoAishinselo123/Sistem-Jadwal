@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import FilterJadwal from '@/components/FilterJadwal.vue'
 import DashboardTable from '@/components/DashboardTable.vue'
+import CustomPrintPage from '@/components/CustomPrintPage.vue'
 import type { IFilterDashboard, IJadwalResponse } from '@/interfaces/IFilterDashboard'
 import { dashboardAPI } from '@/services/dashboardAPI'
 
@@ -25,6 +26,7 @@ const periodeList = ref<string[]>([])
 const laboranList = ref<string[]>([])
 const isLoading = ref(false)
 const apiError = ref('')
+const showPrintPage = ref(false)
 
 // FILTER STATE
 const activeFilters = ref<IFilterDashboard>({
@@ -98,31 +100,16 @@ const filterOptions = computed(() => {
 // Fetch all filter data in parallel
 const fetchFilterData = async () => {
   try {
-    const [laboranRes, prodiRes, makulRes, periodeRes] = await Promise.all([
-      dashboardAPI.getLaboran().catch((err) => {
-        console.error('Error fetching laboran:', err)
-        return { data: [] }
-      }),
-      dashboardAPI.getProdi().catch((err) => {
-        console.error('Error fetching prodi:', err)
-        return { data: [] }
-      }),
-      dashboardAPI.getMakul().catch((err) => {
-        console.error('Error fetching makul:', err)
-        return { data: [] }
-      }),
-      dashboardAPI.getPeriode().catch((err) => {
-        console.error('Error fetching periode:', err)
-        return { data: [] }
-      }),
-    ])
+    const response = await dashboardAPI.getFilter()
 
-    laboranList.value = extractArrayData(laboranRes).map((item) => item.nama_laboran)
-    prodiList.value = extractArrayData(prodiRes).map((item) => item.nama_prodi)
-    makulList.value = extractArrayData(makulRes).map((item) => item.nama_makul)
-    periodeList.value = extractArrayData(periodeRes).map((item) => `${item.periode}`)
+    const data = response.data
+
+    laboranList.value = (data.laboran || []).map((item: any) => item.nama_laboran)
+    prodiList.value = (data.prodi || []).map((item: any) => item.nama_prodi)
+    makulList.value = (data.makul || []).map((item: any) => item.nama_makul)
+    periodeList.value = (data.periode || []).map((item: any) => item.periode)
   } catch (error) {
-    console.error('Error fetching filter data:', error)
+    console.error('Failed to fetch filter data:', error)
   }
 }
 
@@ -245,7 +232,7 @@ const handleDelete = async (row: any) => {
 }
 
 const handlePrint = () => {
-  window.print()
+  showPrintPage.value = true
 }
 
 // FETCH DATA ON MOUNT
@@ -255,7 +242,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <div class="no-print">
     <p class="text-4xl font-bold text-black">Dashboard Jadwal Perkuliahan</p>
     <p class="text-xl font-base text-black mb-8">Monitor dan kelola perkuliahan kampus</p>
 
@@ -300,16 +287,16 @@ onMounted(async () => {
       @delete="handleDelete"
       @print="handlePrint"
     />
-
-    <!-- Empty State -->
-    <!-- <div
-      v-if="!isLoading && !apiError && filteredData.length === 0"
-      class="p-8 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300"
-    >
-      <p class="text-gray-500 text-lg">Tidak ada data jadwal yang tersedia</p>
-      <p class="text-gray-400 text-sm mt-2">Coba ubah filter atau tambahkan jadwal baru</p>
-    </div> -->
   </div>
+  <!-- Print Page -->
+  <CustomPrintPage
+    :show="showPrintPage"
+    title="Jadwal Perkuliahan"
+    :columns="columns"
+    :data="filteredData"
+    :filters="activeFilters"
+    @close="showPrintPage = false"
+  />
 </template>
 
 <style scoped>

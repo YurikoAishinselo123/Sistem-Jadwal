@@ -7,6 +7,7 @@ export const dashboardAPI = {
   getMakul: () => apiClient.get('/makul'),
   getWaktuPerkuliahan: () => apiClient.get('/waktu'),
   getPeriode: () => apiClient.get('/periode'),
+  getFilter: () => apiClient.get('/filter'),
 
   getJadwalById: (id: number) => apiClient.get(`/jadwal/${id}`),
   createJadwal: (data: any) => apiClient.post(`/jadwal`, data),

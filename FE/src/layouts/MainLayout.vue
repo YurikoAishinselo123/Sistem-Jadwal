@@ -1,14 +1,18 @@
 <template>
   <div class="flex flex-row min-w-screen">
-    <aside class="shadow-lg min-h-screen">
+    <!-- Sidebar (hidden when printing) -->
+    <aside class="shadow-lg min-h-screen no-print">
       <Sidebar />
     </aside>
+
+    <!-- Main Content -->
     <main class="flex-1 p-10 font-sans flex flex-col min-h-0">
       <router-view class="flex-1 min-h-0" />
     </main>
 
-    <!-- Toast Notification -->
+    <!-- Toast Notification (also hidden when printing) -->
     <ToastNotification
+      class="no-print"
       :show="toastState.show"
       :type="toastState.type"
       :message="toastState.message"
@@ -24,3 +28,25 @@ import { useToast } from '@/composables/UseToast'
 
 const { toastState, hideToast } = useToast()
 </script>
+
+<style scoped>
+@media print {
+  /* Hide sidebar & top UI in ALL browsers (Safari safe) */
+  .no-print {
+    display: none !important;
+  }
+
+  aside {
+    display: none !important;
+  }
+
+  main {
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  body {
+    margin: 0 !important;
+  }
+}
+</style>
