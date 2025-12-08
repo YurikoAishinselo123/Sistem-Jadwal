@@ -48,7 +48,6 @@ async function loadFromAPI() {
 
     if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
       ruangList.value = []
-      success('Data ruang masih kosong')
       return
     }
 
