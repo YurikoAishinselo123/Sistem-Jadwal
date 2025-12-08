@@ -54,7 +54,7 @@ class RuanganController extends Controller implements HasMiddleware
             'kode_ruangan'=>'required',
             'nama_ruangan'=>'required'
         ]);//
-        $ruangan->Ruangan::update($fields);
+        $ruangan->update($fields);
         return ['ruangan' => $ruangan];
         //
     }
@@ -64,6 +64,13 @@ class RuanganController extends Controller implements HasMiddleware
      */
     public function destroy(Ruangan $ruangan)
     {
-        $ruangan->delete();//
+        if($ruangan->jadwal()->exists()){
+            return response("Data ruangan tidak bisa dihapus karena terdapat di data jadwal", 422);
+        }else{
+            $ruangan->delete();//
+            return[
+                "messsage"=>"Data ruangan berhasil dihapus"
+            ];
+        }
     }
 }

@@ -32,7 +32,7 @@ class StoreJadwalRequest extends FormRequest
             'status'=> 'required',
             'prodi_id'=> 'required',
             'kelas'=> 'required',
-            'ruangan_id'=> ['required',
+            'ruangan_id'=> ['required_if:status,offline',
             Rule::unique('jadwals','ruangan_id')
             ->where('periode_tahun_id', $this->input('periode_tahun_id'))
             ->where('hari_jadwal', $this->input('hari_jadwal'))

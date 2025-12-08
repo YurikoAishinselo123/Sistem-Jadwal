@@ -57,7 +57,7 @@ class MakulController extends Controller implements HasMiddleware
             'nama_makul' => 'required'
         ]);//
 
-        $makul->Makul::update($fields);
+        $makul->update($fields);
         return ['makul' => $makul];//
         //
         //
@@ -68,6 +68,13 @@ class MakulController extends Controller implements HasMiddleware
      */
     public function destroy(Makul $makul)
     {
-        $makul->delete();//
+        if($makul->jadwal()->exists()){
+            return response("Data makul tidak bisa dihapus karena terdapat di data jadwal", 422);
+        }else{
+            $makul->delete();//
+            return[
+                "messsage"=>"Data makul berhasil dihapus"
+            ];
+        }
     }
 }

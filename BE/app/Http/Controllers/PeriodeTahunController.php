@@ -59,7 +59,7 @@ class PeriodeTahunController extends Controller implements HasMiddleware
             'tanggal_mulai' => 'required'
         ]);//
 
-        $input = PeriodeTahun::update($fields);
+        $input = $periodeTahun->update($fields);
         return ['Periode' => $input];//
         //
     }
@@ -69,6 +69,13 @@ class PeriodeTahunController extends Controller implements HasMiddleware
      */
     public function destroy(PeriodeTahun $periodeTahun)
     {
-        $periodeTahun->delete();//
+        if($periodeTahun->jadwal()->exists()){
+            return response("Data periode tidak bisa dihapus karena terdapat di data jadwal", 422);
+        }else{
+            $periodeTahun->delete();//
+            return[
+                "messsage"=>"Data periode berhasil dihapus"
+            ];
+        }
     }
 }

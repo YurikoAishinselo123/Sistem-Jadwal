@@ -9,9 +9,10 @@ use App\Models\Makul;
 use App\Models\PeriodeTahun;
 use App\Models\Prodi;
 use App\Models\Ruangan;
+use App\Models\WaktuPerkuliahan;
 use Illuminate\Http\Request;
 
-class FilterController extends Controller
+class DataController extends Controller
 {
     public function getFilterData(){
         $periode = PeriodeTahun::select('periode')->distinct()->get();
@@ -31,6 +32,24 @@ class FilterController extends Controller
             "dosen"=>$dosen,
             "laboran"=>$laboran,
             "ruangan"=>$ruangan
+        ];
+    }
+    public function getInputData(){
+        $periode = PeriodeTahun::select('id','periode')->distinct()->get();
+        $prodi = Prodi::select('id','nama_prodi')->distinct()->get();
+        $makul = Makul::select('id','nama_makul')->distinct()->get();
+        $dosen = Dosen::select('id', 'nama_dosen')->distinct()->get();
+        $laboran = Laboran::select('id', 'nama_laboran')->distinct()->get();;
+        $ruangan = Ruangan::select('id', 'kode_ruangan')->distinct()->get();;
+        $waktu = WaktuPerkuliahan::all();
+        return [
+            "periode"=>$periode,
+            "prodi"=>$prodi,
+            "makul"=>$makul,
+            "dosen"=>$dosen,
+            "laboran"=>$laboran,
+            "ruangan"=>$ruangan,
+            "waktu"=>$waktu
         ];
     }
     //
