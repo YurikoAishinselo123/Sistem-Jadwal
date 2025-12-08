@@ -5,4 +5,5 @@ export const authenticationAPI = {
     apiClient.post('register', data),
 
   login: (data: { name: string; password: string }) => apiClient.post('login', data),
+  logout: () => apiClient.post('/logout'),
 }

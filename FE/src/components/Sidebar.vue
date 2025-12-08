@@ -10,6 +10,7 @@ import Add_Icon from '@/assets/icons/Add_icon.vue'
 import Chart_icon from '@/assets/icons/Chart_icon.vue'
 import Door_icon from '@/assets/icons/Door_icon.vue'
 import Database_icon from '@/assets/icons/Database_icon.vue'
+import { authenticationAPI } from '@/services/authenticationAPI'
 
 // route + router
 const router = useRouter()
@@ -41,17 +42,23 @@ const isActiveRoute = (routeName: string) => {
   return route.name === routeName
 }
 
-// Logout function
-const handleLogout = () => {
-  // Clear authentication data
-  localStorage.removeItem('isAuthenticated')
-  localStorage.removeItem('username')
+const handleLogout = async () => {
+  try {
+    await authenticationAPI.logout()
 
-  // Close mobile menu if open
-  isOpen.value = false
+    // Clear local data
+    localStorage.removeItem('token')
+    localStorage.removeItem('isAuthenticated')
+    localStorage.removeItem('username')
 
-  // Redirect to login page
-  router.push({ name: 'login' })
+    isOpen.value = false
+
+    router.push({ name: 'login' })
+  } catch (error) {
+    localStorage.removeItem('token')
+    localStorage.removeItem('isAuthenticated')
+    router.push({ name: 'login' })
+  }
 }
 </script>
 
