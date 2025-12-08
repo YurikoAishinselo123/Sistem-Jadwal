@@ -47,7 +47,6 @@ async function loadFromAPI() {
 
     if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
       makulList.value = []
-      success('Data Makul masih kosong')
       return
     }
 
@@ -104,12 +103,11 @@ async function handleSubmit(data: { kode: string; nama: string }) {
     }
 
     if (isEdit.value && editingId.value) {
-      // ✅ UPDATE
       await MasterDataAPI.update('makul', editingId.value, payload)
-      success('Laboran berhasil diupdate!')
+      success('Mata Kuliah berhasil diupdate!')
     } else {
       await MasterDataAPI.create('makul', payload)
-      success('Laboran berhasil ditambahkan!')
+      success('Mata Kuliah berhasil ditambahkan!')
     }
 
     await loadFromAPI()
@@ -122,9 +120,9 @@ async function handleSubmit(data: { kode: string; nama: string }) {
 // Delete Mata Kuliah
 async function handleDelete(index: number) {
   const makul = makulList.value[index]
-  if (!makul) return error('Data ruang tidak ditemukan')
+  if (!makul) return error('Data Kuliah tidak ditemukan')
 
-  if (!confirm(`Hapus ruang "${makul.nama}"?`)) return
+  if (!confirm(`Hapus Kuliah "${makul.nama}"?`)) return
   try {
     const response = await MasterDataAPI.delete('makul', makul.id!)
 
@@ -162,8 +160,9 @@ onMounted(loadFromAPI)
 
   <MasterDataModal
     v-model="showModal"
-    :title="isEdit ? 'Edit Laboran' : 'Tambah Laboran Baru'"
+    :title="isEdit ? 'Edit Mata Kuliah' : 'Tambah Mata Kuliah Baru'"
     subtitle="Masukkan informasi mata kuliah di bawah ini"
+    :data="modalData"
     :fields="makulFields"
     :submit-text="isEdit ? 'Edit' : 'Tambah'"
     @submit="handleSubmit"

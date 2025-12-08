@@ -38,7 +38,6 @@ async function loadFromAPI() {
 
     if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
       prodiList.value = []
-      success('Data prodi masih kosong')
       return
     }
 
@@ -144,7 +143,7 @@ onMounted(loadFromAPI)
 
   <MasterDataModal
     v-model="showModal"
-    :title="isEdit ? 'Edit Laboran' : 'Tambah Laboran Baru'"
+    :title="isEdit ? 'Edit Prodi' : 'Tambah Prodi Baru'"
     subtitle="Masukkan informasi prodi di bawah ini"
     :fields="prodiFields"
     :data="modalData"

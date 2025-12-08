@@ -100,7 +100,7 @@
 
         <!-- EMPTY STATE -->
         <div v-if="filteredItems.length === 0" class="p-6 text-center text-gray-500">
-          No matching results found.
+          Tidak ditemukan hasil yang sesuai.
         </div>
       </div>
     </div>

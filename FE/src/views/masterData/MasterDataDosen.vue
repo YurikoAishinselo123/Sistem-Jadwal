@@ -7,8 +7,22 @@ import { useToast } from '@/composables/UseToast'
 
 const { success, error } = useToast()
 
-const dosenList = ref<any[]>([])
+interface IDosen {
+  id: number | null
+  kode: string
+  nama: string
+}
+
+// ================== STATE ==================
+const dosenList = ref<IDosen[]>([])
 const showModal = ref(false)
+const isEdit = ref(false)
+const editingId = ref<number | null>(null)
+
+const modalData = ref({
+  kode: '',
+  nama: '',
+})
 
 const dosenFields = [
   { name: 'kode', label: 'Kode Dosen', placeholder: 'Masukkan kode dosen', type: 'text' },
@@ -16,84 +30,106 @@ const dosenFields = [
 ]
 
 // Load data from API
-async function loadDosen() {
+async function loadFromAPI() {
   try {
     const response = await MasterDataAPI.getAll('dosen')
-    const data = response.data
+    const rawData = response.data
 
-    dosenList.value = data.map((item: any) => ({
-      id: item.id,
-      kode: item.kode_dosen,
-      nama: item.nama_dosen,
-    }))
+    if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+      dosenList.value = []
+      return
+    }
+
+    dosenList.value = rawData
+      .filter((item: any) => item)
+      .map(
+        (item: any): IDosen => ({
+          id: item.id ?? null,
+          kode: item.kode_dosen ?? '',
+          nama: item.nama_dosen ?? '',
+        }),
+      )
   } catch (err) {
+    dosenList.value = []
     error('Gagal memuat data dosen')
   }
 }
 
+// ================== ADD ==================
+const handleAdd = () => {
+  isEdit.value = false
+  editingId.value = null
+
+  modalData.value = {
+    kode: '',
+    nama: '',
+  }
+
+  showModal.value = true
+}
+
+// ================== Edit ==================
+async function handleEdit(index: number) {
+  const dosen = dosenList.value[index]
+  if (!dosen) return error('Data dosen tidak ditemukan')
+
+  isEdit.value = true
+  editingId.value = dosen.id
+
+  modalData.value = {
+    kode: dosen.kode,
+    nama: dosen.nama,
+  }
+
+  showModal.value = true
+}
+
 // Add new dosen
-async function handleDosenSubmit(data: { kode: string; nama: string }) {
+async function handleSubmit(data: { kode: string; nama: string }) {
   try {
     const payload = {
       kode_dosen: data.kode,
       nama_dosen: data.nama,
     }
 
-    await MasterDataAPI.create('dosen', payload)
-    await loadDosen()
-    showModal.value = false
-
-    success('Dosen berhasil ditambahkan!')
-  } catch (err) {
-    error('Gagal menambahkan dosen')
-  }
-}
-
-// Open modal
-const handleAdd = () => {
-  showModal.value = true
-}
-
-// Edit dosen
-async function handleEdit(index: number) {
-  const dosen = dosenList.value[index]
-  const newNama = prompt('Edit nama dosen:', dosen.nama)
-
-  if (newNama !== null && newNama.trim() !== '') {
-    try {
-      await MasterDataAPI.update('dosen', dosen.id || dosen.kode, {
-        kode_dosen: dosen.kode,
-        nama_dosen: newNama,
-      })
-      await loadDosen()
-
+    if (isEdit.value && editingId.value) {
+      await MasterDataAPI.update('dosen', editingId.value, payload)
       success('Dosen berhasil diupdate!')
-    } catch (err) {
-      console.warn('API update failed', err)
-      error('Gagal mengupdate dosen')
+    } else {
+      await MasterDataAPI.create('dosen', payload)
+      success('Dosen berhasil ditambahkan!')
     }
+    await loadFromAPI()
+    showModal.value = false
+  } catch (err) {
+    error(isEdit.value ? 'Gagal mengubah data dosen' : 'Gagal menambahkan dosen')
   }
 }
 
 // Delete dosen
 async function handleDelete(index: number) {
   const dosen = dosenList.value[index]
+  if (!dosen) return error('Data dosen tidak ditemukan')
 
-  if (confirm(`Hapus dosen "${dosen.nama}"?`)) {
-    try {
-      await MasterDataAPI.delete('dosen', dosen.id)
-      await loadDosen()
+  if (!confirm(`Hapus ruang "${dosen.nama}"?`)) return
+  try {
+    const response = await MasterDataAPI.delete('dosen', dosen.id!)
 
-      success('Dosen berhasil dihapus!')
-    } catch (err) {
-      console.warn('API delete failed', err)
-      error('Gagal menghapus dosen')
+    const message = response?.data?.message
+    if (message) {
+      return error(message)
     }
+
+    success('Dosen berhasil dihapus!')
+    await loadFromAPI()
+  } catch (err: any) {
+    const message = err?.response?.data?.message || 'Gagal menghapus data dosen'
+    error(message)
   }
 }
 
 // Load data on mount
-onMounted(loadDosen)
+onMounted(loadFromAPI)
 </script>
 
 <template>
@@ -113,10 +149,11 @@ onMounted(loadDosen)
 
   <MasterDataModal
     v-model="showModal"
-    title="Tambah Dosen Baru"
+    :title="isEdit ? 'Edit Dosen' : 'Tambah Dosen'"
     subtitle="Masukkan informasi dosen di bawah ini"
+    :data="modalData"
     :fields="dosenFields"
-    submit-text="Tambah"
-    @submit="handleDosenSubmit"
+    :submit-text="isEdit ? 'Edit' : 'Tambah'"
+    @submit="handleSubmit"
   />
 </template>
