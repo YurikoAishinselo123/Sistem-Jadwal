@@ -2,16 +2,16 @@
   <div>
     <!-- Header -->
     <div class="mb-8 mt-12 sm:mt-10 xl:mt-0">
-      <h1 class="text-xl sm:text-3xl font-bold text-black">Beban Kerja Dosen</h1>
-      <p class="text-sm sm:text-lg text-black">Monitor beban mengajar dosen per minggu</p>
+      <h1 class="text-xl sm:text-3xl font-bold text-black">Beban Ruang Kelas</h1>
+      <p class="text-sm sm:text-lg text-black">Monitor beban ruang kelas per minggu</p>
     </div>
 
     <!-- Dosen Selector -->
     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
       <CustomDropdown
-        v-model="selectedDosen"
-        :options="dosenOptions"
-        placeholder="Pilih dosen untuk melihat beban kerja dosen"
+        v-model="selectedRuang"
+        :options="ruangOption"
+        placeholder="Pilih Ruang Kelas untuk melihat beban Ruang Kelas"
         label="Kelas"
         :searchable="true"
         class="max-w-full"
@@ -19,7 +19,7 @@
     </div>
 
     <!-- Workload Summary Card -->
-    <div v-if="selectedDosen" :class="`${cardBgColor} rounded-xl shadow-lg p-8 mb-6 text-white`">
+    <div v-if="selectedRuang" :class="`${cardBgColor} rounded-xl shadow-lg p-8 mb-6 text-white`">
       <div class="flex items-center gap-6">
         <!-- Icon Cell -->
         <div class="bg-white rounded-full p-4 flex items-center justify-center w-16 h-16">
@@ -41,7 +41,7 @@
 
         <!-- Text Cell -->
         <div class="flex flex-col justify-center" :class="textColor">
-          <h2 class="text-lg font-medium mb-2">Total Beban Kerja {{ selectedDosen }}</h2>
+          <h2 class="text-lg font-medium mb-2">Total Beban Kerja Ruang {{ selectedRuang }}</h2>
           <div class="text-2xl sm:text-3xl font-bold">
             {{ totalSKS }} SKS | {{ totalSesi }} Sesi / Minggu
           </div>
@@ -50,12 +50,12 @@
     </div>
 
     <!-- Schedule Table using DashboardTable Component -->
-    <div v-if="selectedDosen">
+    <div v-if="selectedRuang">
       <DashboardTable
         :columns="columns"
-        :data="filteredSchedules"
+        :data="scheduleList"
         :has-actions="false"
-        empty-message="Tidak ada jadwal ditemukan untuk dosen ini"
+        empty-message="Tidak ada jadwal ditemukan untuk Ruang kelas ini"
         @print="handlePrint"
       />
     </div>
@@ -63,16 +63,18 @@
     <!-- Empty State - No Dosen Selected -->
     <div v-else class="bg-white rounded-xl shadow-lg p-12 text-center">
       <img :src="Room_icon" class="w-20 mx-auto" />
-      <p class="text-gray-500 mt-6">Pilih dosen untuk melihat beban kerja mengajar</p>
+      <p class="text-gray-500 mt-6">Pilih ruang kelas untuk melihat beban ruang kelas</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import CustomDropdown from '@/components/CustomDropdown.vue'
 import DashboardTable from '@/components/DashboardTable.vue'
 import Room_icon from '../assets/image/Room_icon.svg'
+import { bebanruangAPI } from '@/services/bebanruangAPI'
+import apiClient from '@/services/apiClient'
 
 // Schedule interface
 interface ISchedule {
@@ -83,8 +85,8 @@ interface ISchedule {
   dosen: string
   ruang: string
   waktu: string
-  sks: string
-  sesi: string
+  sks: number
+  sesi: number
 }
 
 // Columns for table
@@ -100,96 +102,70 @@ const columns = ref([
 ])
 
 // Selected dosen
-const selectedDosen = ref('')
+const selectedRuang = ref('')
+const ruangRaw = ref<any[]>([])
+const scheduleRaw = ref<any[]>([])
+const scheduleList = ref<ISchedule[]>([])
 
-// Dosen options
-const dosenOptions = [
-  'Dr. Suryo, S.Pd, M.Pd',
-  'Adhe Aryswan, S.Pd., M.Si.',
-  'Haposan Vincentius, S.T., M.Sc.',
-  'Dr. Budi Santoso, M.Kom.',
-  'Prof. Siti Rahayu, Ph.D.',
-]
+// lookup data api
+const makulMap = ref<Record<number, string>>({})
+const prodiMap = ref<Record<number, string>>({})
+const ruanganMap = ref<Record<number, string>>({})
+const dosenMap = ref<Record<number, string>>({})
 
-// Sample schedule data
-const scheduleData = ref<ISchedule[]>([
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '108 B',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Senin',
-    kodeMakul: 'TI101',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Algoritma',
-    dosen: 'Adhe Aryswan, S.Pd., M.Si.',
-    ruang: '201 A',
-    waktu: '09:30 - 12:00',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-  {
-    hari: 'Selasa',
-    kodeMakul: 'TI102',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Pemrograman',
-    dosen: 'Adhe Aryswan, S.Pd., M.Si.',
-    ruang: '202 B',
-    waktu: '13:00 - 15:30',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-  {
-    hari: 'Rabu',
-    kodeMakul: 'TI103',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Basis Data',
-    dosen: 'Haposan Vincentius, S.T., M.Sc.',
-    ruang: '301 A',
-    waktu: '07:00 - 09:30',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-  {
-    hari: 'Kamis',
-    kodeMakul: 'TI104',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Jaringan Komputer',
-    dosen: 'Haposan Vincentius, S.T., M.Sc.',
-    ruang: '302 B',
-    waktu: '13:00 - 15:30',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-])
+const fetchMasterData = async () => {
+  const [makul, prodi, ruangan, dosen] = await Promise.all([
+    apiClient.get('/makul'),
+    apiClient.get('/prodi'),
+    apiClient.get('/ruangan'),
+    apiClient.get('/dosen'),
+    apiClient.get('/jadwal'),
+  ])
 
-// Filter schedules by selected dosen
-const filteredSchedules = computed(() =>
-  scheduleData.value.filter((schedule) => schedule.dosen === selectedDosen.value),
-)
+  makul.data.forEach((m: any) => (makulMap.value[m.id] = m.nama_makul))
+  prodi.data.forEach((p: any) => (prodiMap.value[p.id] = p.nama_prodi))
+  ruangan.data.forEach((r: any) => (ruanganMap.value[r.id] = r.nama_ruangan))
+  dosen.data.forEach((d: any) => (dosenMap.value[d.id] = d.nama_dosen))
+
+  ruangRaw.value = ruangan.data
+  scheduleRaw.value = scheduleList.value
+}
+
+const fetchRuang = async () => {
+  const res = await bebanruangAPI.getRuang()
+  ruangRaw.value = res.data
+}
+const ruangOption = computed(() => ruangRaw.value.map((r) => r.nama_ruangan))
+
+// fetch ruang
+const filterByNamaRuang = () => {
+  scheduleList.value = scheduleRaw.value
+    .filter((item: any) => {
+      const namaRuang = ruanganMap.value[item.ruangan_id]
+      return namaRuang === selectedRuang.value
+    })
+    .map((item: any) => ({
+      hari: item.hari_jadwal,
+      kodeMakul: makulMap.value[item.makul_id] ?? '-',
+      programStudi: prodiMap.value[item.prodi_id] ?? '-',
+      mataKuliah: makulMap.value[item.makul_id] ?? '-',
+      dosen: dosenMap.value[item.dosen_1] ?? '-',
+      sks: Number(item.sks ?? 1),
+      sesi: Number(item.sesi ?? 1),
+      ruang: ruanganMap.value[item.ruangan_id] ?? '-',
+      waktu: `${item.waktu_mulai} - ${item.waktu_selesai}`,
+    }))
+}
+
+watch(selectedRuang, (val) => {
+  if (val) filterByNamaRuang()
+})
 
 // Total SKS
-const totalSKS = computed(() =>
-  filteredSchedules.value.reduce(
-    (sum, schedule) => sum + (parseInt(schedule.sks.replace(' SKS', '')) || 0),
-    0,
-  ),
-)
+const totalSKS = computed(() => scheduleList.value.reduce((sum, s) => sum + s.sks, 0))
 
 // Total sessions per week
-const totalSesi = computed(() =>
-  filteredSchedules.value.reduce(
-    (sum, schedule) => sum + (parseInt(schedule.sesi.replace(' Sesi', '')) || 0),
-    0,
-  ),
-)
+const totalSesi = computed(() => scheduleList.value.reduce((sum, s) => sum + s.sesi, 0))
 
 // Dynamic card background color
 const cardBgColor = computed(() => {
@@ -212,6 +188,11 @@ const iconColor = computed(() => {
 
 // Print handler
 const handlePrint = () => window.print()
+
+onMounted(async () => {
+  await fetchMasterData()
+  await fetchRuang()
+})
 </script>
 
 <style scoped>
