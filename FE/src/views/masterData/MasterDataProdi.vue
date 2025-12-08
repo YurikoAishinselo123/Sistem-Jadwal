@@ -7,85 +7,124 @@ import { useToast } from '@/composables/UseToast'
 
 const { success, error } = useToast()
 
+interface ILaboran {
+  id: number | null
+  kode: string
+  nama: string
+}
+
+// ================== STATE ==================
 const prodiList = ref<any[]>([])
 const showModal = ref(false)
+const isEdit = ref(false)
+const editingId = ref<number | null>(null)
 
+const modalData = ref({
+  kode: '',
+  nama: '',
+})
+
+// ================== MODAL FIELDS ==================c
 const prodiFields = [
   { name: 'kode', label: 'Kode Prodi', placeholder: 'Masukkan kode prodi', type: 'text' },
   { name: 'nama', label: 'Nama Prodi', placeholder: 'Masukkan nama prodi', type: 'text' },
 ]
 
-async function loadProdi() {
+// ================== API FUNCTIONS ==================s
+async function loadFromAPI() {
   try {
     const response = await MasterDataAPI.getAll('prodi')
-    const data = response.data
-    prodiList.value = data.map((item: any) => ({
-      id: item.id,
-      kode: item.kode_prodi,
-      nama: item.nama_prodi,
-    }))
+    const rawData = response?.data
+
+    if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+      prodiList.value = []
+      success('Data prodi masih kosong')
+      return
+    }
+
+    prodiList.value = rawData
+      .filter((item: any) => item)
+      .map(
+        (item: any): ILaboran => ({
+          id: item.id ?? null,
+          kode: item.kode_prodi ?? '',
+          nama: item.nama_prodi ?? '',
+        }),
+      )
   } catch (err) {
-    error('Gagal memuat data mata kuliah')
+    prodiList.value = []
+    error('Gagal memuat data prodi')
   }
 }
 
-// Add new prodi
-async function handleProdiSubmit(data: { kode: string; nama: string }) {
+// ================== ADD ==================
+const handleAdd = () => {
+  isEdit.value = false
+  editingId.value = null
+  modalData.value = {
+    kode: '',
+    nama: '',
+  }
+
+  showModal.value = true
+}
+
+// ================== Edit ==================
+const handleEdit = (index: number) => {
+  const prodi = prodiList.value[index]
+  if (!prodi) return error('Data prodi tidak ditemukan')
+
+  isEdit.value = true
+  editingId.value = prodi.id
+
+  modalData.value = {
+    kode: prodi.kode,
+    nama: prodi.nama,
+  }
+
+  showModal.value = true
+}
+
+// ================== SUBMIT (ADD + EDIT) ==================
+async function handleSubmit(data: { kode: string; nama: string }) {
   try {
     const payload = {
       kode_prodi: data.kode,
       nama_prodi: data.nama,
     }
 
-    await MasterDataAPI.create('prodi', payload)
-    await loadProdi()
-    showModal.value = false
-
-    success('Mata Kuliah berhasil ditambahkan!')
-  } catch (err) {
-    error('Gagal menambahkan mata kuliah')
-  }
-}
-
-// Open modal
-const handleAdd = () => {
-  showModal.value = true
-}
-
-// Edit prodi
-async function handleEdit(index: number) {
-  const prodi = prodiList.value[index]
-  const newNama = prompt('Edit nama prodi:', prodi.nama)
-  if (newNama !== null) {
-    try {
-      await MasterDataAPI.update('prodi', prodi.id || prodi.kode, { ...prodi, nama: newNama })
-      await loadProdi()
-      alert('Prodi berhasil diupdate!')
-    } catch (error) {
-      console.warn('API update failed, updating local JSON only', error)
-      prodiList.value[index].nama = newNama
-      alert('Prodi berhasil diupdate (lokal)!')
+    if (isEdit.value && editingId.value) {
+      await MasterDataAPI.update('prodi', editingId.value, payload)
+      success('Prodi berhasil diupdate!')
+    } else {
+      await MasterDataAPI.create('prodi', payload)
+      success('Prodi berhasil ditambahkan!')
     }
+
+    await loadFromAPI()
+    showModal.value = false
+  } catch (err) {
+    error(isEdit.value ? 'Gagal update prodi' : 'Gagal menambahkan prodi')
   }
 }
 
-// Delete prodi
+// Delete
 async function handleDelete(index: number) {
   const prodi = prodiList.value[index]
-  if (confirm(`Hapus prodi "${prodi.nama}"?`)) {
-    try {
-      await MasterDataAPI.delete('prodi', prodi.id || prodi.kode)
-      await loadProdi()
+  if (!prodi) return error('Data ruang tidak ditemukan')
 
-      success('Mata Kuliah berhasil dihapus!')
-    } catch (err) {
-      error('Gagal menghapus mata kuliah')
-    }
+  if (!confirm(`Hapus ruang "${prodi.nama}"?`)) return
+  try {
+    const response = await MasterDataAPI.delete('prodi', prodi.id!)
+    success('Prodi berhasil dihapus!')
+    await loadFromAPI()
+  } catch (err: any) {
+    const message = err?.response?.data?.message || 'Gagal menghapus data prodi'
+    error(message)
   }
 }
 
-// Load data when component mounts
-onMounted(loadProdi)
+onMounted(loadFromAPI)
 </script>
 
 <template>
@@ -105,10 +144,11 @@ onMounted(loadProdi)
 
   <MasterDataModal
     v-model="showModal"
-    title="Tambah Prodi Baru"
+    :title="isEdit ? 'Edit Laboran' : 'Tambah Laboran Baru'"
     subtitle="Masukkan informasi prodi di bawah ini"
     :fields="prodiFields"
-    submit-text="Tambah"
-    @submit="handleProdiSubmit"
+    :data="modalData"
+    :submit-text="isEdit ? 'Edit' : 'Tambah'"
+    @submit="handleSubmit"
   />
 </template>

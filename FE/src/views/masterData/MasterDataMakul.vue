@@ -7,9 +7,24 @@ import { useToast } from '@/composables/UseToast'
 
 const { success, error } = useToast()
 
-const makulList = ref<any[]>([])
-const showModal = ref(false)
+interface IMakul {
+  id: number | null
+  kode: string
+  nama: string
+}
 
+// ================== STATE ==================
+const makulList = ref<IMakul[]>([])
+const showModal = ref(false)
+const isEdit = ref(false)
+const editingId = ref<number | null>(null)
+
+const modalData = ref({
+  kode: '',
+  nama: '',
+})
+
+// ================== MODAL FIELDS ==================
 const makulFields = [
   {
     name: 'kode',
@@ -25,87 +40,109 @@ const makulFields = [
   },
 ]
 
-async function loadMakul() {
+async function loadFromAPI() {
   try {
     const response = await MasterDataAPI.getAll('makul')
-    const data = response.data
+    const rawData = response.data
 
-    // Map API fields → table fields
-    makulList.value = data.map((item: any) => ({
-      id: item.id,
-      kode: item.kode_makul,
-      nama: item.nama_makul,
-    }))
+    if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+      makulList.value = []
+      success('Data Makul masih kosong')
+      return
+    }
+
+    makulList.value = rawData
+      .filter((item: any) => item)
+      .map(
+        (item: any): IMakul => ({
+          id: item.id ?? null,
+          kode: item.kode_makul ?? '',
+          nama: item.nama_makul ?? '',
+        }),
+      )
   } catch (err) {
-    // console.warn('API failed : ', err)
+    makulList.value = []
     error('Gagal memuat data mata kuliah')
   }
 }
 
-// Add new Mata Kuliah
-async function handleMakulSubmit(data: { kode: string; nama: string }) {
+// ================== ADD ==================
+const handleAdd = () => {
+  isEdit.value = false
+  editingId.value = null
+
+  modalData.value = {
+    kode: '',
+    nama: '',
+  }
+
+  showModal.value = true
+}
+
+// ================== Edit ==================
+async function handleEdit(index: number) {
+  const makul = makulList.value[index]
+  if (!makul) return error('Data laboran tidak ditemukan')
+
+  isEdit.value = true
+  editingId.value = makul.id
+
+  modalData.value = {
+    kode: makul.kode,
+    nama: makul.nama,
+  }
+
+  showModal.value = true
+}
+
+// ================== SUBMIT (ADD + EDIT) ==================
+async function handleSubmit(data: { kode: string; nama: string }) {
   try {
     const payload = {
       kode_makul: data.kode,
       nama_makul: data.nama,
     }
 
-    await MasterDataAPI.create('makul', payload)
-    await loadMakul()
-    showModal.value = false
-
-    success('Mata Kuliah berhasil ditambahkan!')
-  } catch (err) {
-    // console.warn('Failed Add new data : ', err)
-    error('Gagal menambahkan mata kuliah')
-  }
-}
-
-// Open modal
-const handleAdd = () => {
-  showModal.value = true
-}
-
-// Edit Mata Kuliah
-async function handleEdit(index: number) {
-  const makul = makulList.value[index]
-  const newNama = prompt('Edit nama mata kuliah:', makul.nama)
-
-  if (newNama !== null && newNama.trim() !== '') {
-    try {
-      await MasterDataAPI.update('makul', makul.id, {
-        kode_makul: makul.kode,
-        nama_makul: newNama,
-      })
-      await loadMakul()
-
-      success('Mata Kuliah berhasil diupdate!')
-    } catch (err) {
-      console.warn('API update failed', err)
-      error('Gagal mengupdate mata kuliah')
+    if (isEdit.value && editingId.value) {
+      // ✅ UPDATE
+      await MasterDataAPI.update('makul', editingId.value, payload)
+      success('Laboran berhasil diupdate!')
+    } else {
+      await MasterDataAPI.create('makul', payload)
+      success('Laboran berhasil ditambahkan!')
     }
+
+    await loadFromAPI()
+    showModal.value = false
+  } catch (err) {
+    error(isEdit.value ? 'Gagal mengubah data makul' : 'Gagal menambahkan makul')
   }
 }
 
 // Delete Mata Kuliah
 async function handleDelete(index: number) {
   const makul = makulList.value[index]
+  if (!makul) return error('Data ruang tidak ditemukan')
 
-  if (confirm(`Hapus Mata Kuliah "${makul.nama}"?`)) {
-    try {
-      await MasterDataAPI.delete('makul', makul.id)
-      await loadMakul()
+  if (!confirm(`Hapus ruang "${makul.nama}"?`)) return
+  try {
+    const response = await MasterDataAPI.delete('makul', makul.id!)
 
-      success('Mata Kuliah berhasil dihapus!')
-    } catch (err) {
-      // console.warn('API delete failed', err)
-      error('Gagal menghapus mata kuliah')
+    const message = response?.data?.message
+    if (message) {
+      return error(message)
     }
+
+    success('Mata Kuliah berhasil dihapus!')
+    await loadFromAPI()
+  } catch (err: any) {
+    const message = err?.response?.data?.message || 'Gagal menghapus data laboran'
+    error(message)
   }
 }
 
 // Load data when component mounts
-onMounted(loadMakul)
+onMounted(loadFromAPI)
 </script>
 
 <template>
@@ -125,10 +162,10 @@ onMounted(loadMakul)
 
   <MasterDataModal
     v-model="showModal"
-    title="Tambah Mata Kuliah Baru"
+    :title="isEdit ? 'Edit Laboran' : 'Tambah Laboran Baru'"
     subtitle="Masukkan informasi mata kuliah di bawah ini"
     :fields="makulFields"
-    submit-text="Tambah"
-    @submit="handleMakulSubmit"
+    :submit-text="isEdit ? 'Edit' : 'Tambah'"
+    @submit="handleSubmit"
   />
 </template>

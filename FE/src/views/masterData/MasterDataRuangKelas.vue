@@ -7,83 +7,141 @@ import { useToast } from '@/composables/UseToast'
 
 const { success, error } = useToast()
 
-// State
-const ruangList = ref<any[]>([])
-const showModal = ref(false)
+interface IRuang {
+  id: number | null
+  kode: string
+  nama: string
+}
 
-// Modal fields
+// ================== STATE ==================
+const ruangList = ref<IRuang[]>([])
+const showModal = ref(false)
+const isEdit = ref(false)
+const editingId = ref<number | null>(null)
+
+const modalData = ref({
+  kode: '',
+  nama: '',
+})
+
+// ================== MODAL FIELDS ==================
 const ruangFields = [
-  { name: 'kode', label: 'Kode Ruang', placeholder: 'Masukkan kode ruang', type: 'text' },
-  { name: 'nama', label: 'Nama Ruang', placeholder: 'Masukkan nama ruang', type: 'text' },
+  {
+    name: 'kode',
+    label: 'Kode Ruang',
+    placeholder: 'Masukkan kode ruang',
+    type: 'text',
+  },
+  {
+    name: 'nama',
+    label: 'Nama Ruang',
+    placeholder: 'Masukkan nama ruang',
+    type: 'text',
+  },
 ]
 
+// ================== API FUNCTIONS ==================s
 async function loadFromAPI() {
   try {
     const response = await MasterDataAPI.getAll('ruangan')
-    const data = response.data
+    const rawData = response?.data
 
-    ruangList.value = data.map((item: any) => ({
-      id: item.id,
-      kode: item.kode_ruangan,
-      nama: item.nama_ruangan,
-    }))
+    if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+      ruangList.value = []
+      success('Data ruang masih kosong')
+      return
+    }
+
+    ruangList.value = rawData
+      .filter((item: any) => item)
+      .map(
+        (item: any): IRuang => ({
+          id: item.id ?? null,
+          kode: item.kode_ruangan ?? '',
+          nama: item.nama_ruangan ?? '',
+        }),
+      )
   } catch (err) {
-    error('Gagal memuat data mata kuliah')
+    ruangList.value = []
+    error('Gagal memuat data ruang')
   }
 }
 
-// --- Handlers ---
-const handleAddRuang = () => {
+// ================== ADD ==================
+const handleAdd = () => {
+  isEdit.value = false
+  editingId.value = null
+
+  modalData.value = {
+    kode: '',
+    nama: '',
+  }
+
   showModal.value = true
 }
 
-async function handleRuangSubmit(data: { kode: string; nama: string }) {
+// ================== EDIT ==================
+function handleEdit(index: number) {
+  const ruang = ruangList.value[index]
+  if (!ruang) return error('Data ruang tidak ditemukan')
+
+  isEdit.value = true
+  editingId.value = ruang.id
+
+  modalData.value = {
+    kode: ruang.kode,
+    nama: ruang.nama,
+  }
+
+  showModal.value = true
+}
+
+// ================== SUBMIT (ADD + EDIT) ==================
+async function handleSubmit(data: { kode: string; nama: string }) {
   try {
     const payload = {
       kode_ruangan: data.kode,
       nama_ruangan: data.nama,
     }
 
-    await MasterDataAPI.create('ruangan', payload)
+    if (isEdit.value && editingId.value) {
+      await MasterDataAPI.update('ruangan', editingId.value, payload)
+      success('Ruang berhasil diperbarui!')
+    } else {
+      await MasterDataAPI.create('ruangan', payload)
+      success('Ruang berhasil ditambahkan!')
+    }
+
     await loadFromAPI()
     showModal.value = false
-
-    success('Mata Kuliah berhasil ditambahkan!')
   } catch (err) {
-    error('Gagal menambahkan mata kuliah')
+    error(isEdit.value ? 'Gagal mengubah data makul' : 'Gagal menambahkan makul')
   }
 }
 
-async function handleEdit(index: number) {
-  const ruang = ruangList.value[index]
-  const newNama = prompt('Edit nama ruang:', ruang.nama)
-  if (newNama !== null) {
-    try {
-      await MasterDataAPI.update('ruangan', ruang.id || ruang.kode, { ...ruang, nama: newNama })
-      await loadFromAPI()
-      alert('Ruang berhasil diupdate!')
-    } catch (error) {
-      console.error('Error updating ruangan:', error)
-      alert('Gagal mengupdate ruangan. Mengubah dummy data saja.')
-      ruang.nama = newNama
-    }
-  }
-}
-
+// ================== DELETE ==================
 async function handleDelete(index: number) {
   const ruang = ruangList.value[index]
-  if (confirm(`Hapus ruang "${ruang.nama}"?`)) {
-    try {
-      await MasterDataAPI.delete('ruangan', ruang.id || ruang.kode)
-      await loadFromAPI()
-      success('Mata Kuliah berhasil dihapus!')
-    } catch (err) {
-      error('Gagal menghapus mata kuliah')
-    }
+  if (!ruang) return error('Data ruang tidak ditemukan')
+
+  if (!confirm(`Hapus ruang "${ruang.nama}"?`)) return
+
+  try {
+    const response = await MasterDataAPI.delete('ruangan', ruang.id!)
+
+    // const message = response?.data.message
+
+    // For Temp
+    const message = response?.data.messsage
+    alert(message)
+
+    success('Ruang berhasil dihapus!')
+    await loadFromAPI()
+  } catch (err) {
+    error('Gagal menghapus data ruang')
   }
 }
 
-// Load data on mount
 onMounted(loadFromAPI)
 </script>
 
@@ -98,17 +156,18 @@ onMounted(loadFromAPI)
     addLabel="Ruang Kelas"
     :columnSizes="['150px', '1fr']"
     :show-default-actions="true"
-    @add="handleAddRuang"
+    @add="handleAdd"
     @edit="handleEdit"
     @delete="handleDelete"
   />
 
   <MasterDataModal
     v-model="showModal"
-    title="Tambah Ruang Kelas Baru"
+    :title="isEdit ? 'Edit Ruang Kelas' : 'Tambah Ruang Kelas Baru'"
     subtitle="Masukkan informasi ruang kelas di bawah ini"
     :fields="ruangFields"
-    submit-text="Tambah"
-    @submit="handleRuangSubmit"
+    :data="modalData"
+    :submit-text="isEdit ? 'Edit' : 'Tambah'"
+    @submit="handleSubmit"
   />
 </template>

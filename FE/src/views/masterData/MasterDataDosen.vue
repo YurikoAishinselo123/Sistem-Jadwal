@@ -27,7 +27,6 @@ async function loadDosen() {
       nama: item.nama_dosen,
     }))
   } catch (err) {
-    console.warn('API failed : ', err)
     error('Gagal memuat data dosen')
   }
 }
@@ -46,7 +45,6 @@ async function handleDosenSubmit(data: { kode: string; nama: string }) {
 
     success('Dosen berhasil ditambahkan!')
   } catch (err) {
-    console.warn('Failed Add new data : ', err)
     error('Gagal menambahkan dosen')
   }
 }
