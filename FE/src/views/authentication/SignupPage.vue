@@ -72,17 +72,15 @@ const handleSignup = async () => {
       }, 2000)
     }
   } catch (error: any) {
-    console.error('FULL ERROR: ', error)
-    console.error('ERROR RESPONSE: ', error.response)
-    console.error('ERROR DATA: ', error.response?.data)
+    apiError.value = ''
 
-    // Handle different types of errors
-    if (error.response?.status === 400) {
-      apiError.value = error.response?.data?.message || 'Data yang dimasukkan tidak valid'
-    } else if (error.response?.status === 422) {
-      apiError.value = 'Email sudah terdaftar, Silahkan mendaftar menggunakan email lain'
-    } else if (error.response?.status === 500) {
-      apiError.value = 'Terjadi kesalahan pada server, silakan coba lagi'
+    if (error.response && error.response.data?.errors) {
+      const errors = error.response.data.errors
+
+      // Convert object -> array -> string
+      apiError.value = Object.values(errors).flat().join('\n')
+    } else {
+      apiError.value = 'Terjadi kesalahan, silakan coba lagi.'
     }
   }
 }
@@ -103,7 +101,7 @@ const handleSignup = async () => {
         <!-- API Error Message -->
         <div
           v-if="apiError"
-          class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+          class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm whitespace-pre-line"
         >
           {{ apiError }}
         </div>

@@ -44,6 +44,11 @@ const routes = [
         component: DashboardView,
       },
       {
+        path: '/dashboard/detail/:id',
+        name: 'DetailJadwal',
+        component: DashboardViewDetail,
+      },
+      {
         path: 'tambah-jadwal',
         name: 'tambahJadwal',
         component: TambahJadwalView,
@@ -57,11 +62,6 @@ const routes = [
         path: 'beban-ruang-kelas',
         name: 'bebanRuangKelas',
         component: BebanRuangKelasView,
-      },
-      {
-        path: 'detail',
-        name: 'detail',
-        component: DashboardViewDetail,
       },
     ],
   },

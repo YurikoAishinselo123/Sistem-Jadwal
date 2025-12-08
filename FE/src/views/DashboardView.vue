@@ -5,6 +5,9 @@ import DashboardTable from '@/components/DashboardTable.vue'
 import CustomPrintPage from '@/components/CustomPrintPage.vue'
 import type { IFilterDashboard, IJadwalResponse } from '@/interfaces/IFilterDashboard'
 import { dashboardAPI } from '@/services/dashboardAPI'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // TABLE COLUMNS
 const columns = ref([
@@ -40,7 +43,7 @@ const activeFilters = ref<IFilterDashboard>({
 })
 
 // STATIC OPTIONS
-const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']
+const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']
 const JENIS_JADWAL = ['Jadwal Semester', 'Jadwal Pengganti', 'Jadwal Ujian']
 const SESI_PERKULIAHAN = ['Sesi Pagi', 'Sesi Malam']
 
@@ -88,7 +91,7 @@ const filterOptions = computed(() => {
 
   return {
     periodeTahunAjaran: periods.length > 0 ? periods : periodeList.value,
-    hari: getUniqueValues(jadwalData.value, 'hari_jadwal'),
+    hari: DAYS,
     programStudi: prodiList.value,
     mataKuliah: makulList.value,
     jenisJadwal: JENIS_JADWAL,
@@ -231,6 +234,17 @@ const handleDelete = async (row: any) => {
   }
 }
 
+const handleDetail = (row: any & { index: number }) => {
+  console.log('Detail clicked for index:', row.index)
+
+  router.push({
+    name: 'DetailJadwal',
+    params: {
+      id: row.index,
+    },
+  })
+}
+
 const handlePrint = () => {
   showPrintPage.value = true
 }
@@ -286,6 +300,7 @@ onMounted(async () => {
       @edit="handleEdit"
       @delete="handleDelete"
       @print="handlePrint"
+      @detail="handleDetail"
     />
   </div>
   <!-- Print Page -->

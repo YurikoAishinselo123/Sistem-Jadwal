@@ -1,24 +1,34 @@
 <script setup lang="ts">
-import { reactive, computed, watch } from 'vue'
+import { reactive, computed, watch, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import CustomDropdown from '@/components/CustomDropdown.vue'
 
-import DataMakul from '@/dummy data/dataMakul.json'
-import DataDosen from '@/dummy data/dataDosen.json'
-import DataProdi from '@/dummy data/dataProdi.json'
-import DataLaboran from '@/dummy data/dataLaboran.json'
-import DataPeriode from '@/dummy data/dataPeriode.json'
-import DataRuangKelas from '@/dummy data/dataRuangKelas.json'
 import DataWaktuPerkuliahan from '@/dummy data/dataWaktuPerkuliahan.json'
+import { dashboardAPI } from '@/services/dashboardAPI'
+import { useToast } from '@/composables/UseToast'
 
 const router = useRouter()
+const { success } = useToast()
+
+// API data storage
+const apiData = ref({
+  periode: [],
+  prodi: [],
+  makul: [],
+  dosen: [],
+  laboran: [],
+  ruangan: [],
+  waktu: [],
+})
+
+const isLoading = ref(true)
 
 // Time slots definition
 const timeSlots = { ...DataWaktuPerkuliahan }
-
 const allTimeSlots = [...timeSlots.pagi, ...timeSlots.malam]
+const isOnline = computed(() => formData.status === 'Online')
 
-// Form data
+// Form data - stores display values
 const formData = reactive({
   periodeTahunAjaran: '',
   hari: '',
@@ -33,6 +43,17 @@ const formData = reactive({
   dosen2: '',
   laboran: '',
   ruangKelas: '',
+})
+
+// Store selected IDs for API payload
+const selectedIds = reactive({
+  periodeId: null,
+  prodiId: null,
+  makulId: null,
+  dosen1Id: null,
+  dosen2Id: null,
+  laboranId: null,
+  ruanganId: null,
 })
 
 // Error state
@@ -50,6 +71,25 @@ const showError = reactive({
   dosen2: false,
   laboran: false,
   ruangKelas: false,
+})
+
+// Fetch form data from API
+const fetchFormData = async () => {
+  try {
+    isLoading.value = true
+    const response = await dashboardAPI.getJadwalFormData()
+    apiData.value = response.data
+  } catch (error) {
+    console.error('Error fetching form data:', error)
+    alert('Gagal memuat data form. Silakan refresh halaman.')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Fetch data on component mount
+onMounted(() => {
+  fetchFormData()
 })
 
 // Determine session based on start time
@@ -83,27 +123,117 @@ watch(
   },
 )
 
-// Dropdown options
-const dropdownOptions = {
-  periodeTahunAjaran: DataPeriode.map((item) => `${item.namaPeriode} ${item.tahun}`),
+// Filter dosen options for Dosen 1 (exclude dosen2)
+const dosen1Options = computed(() => {
+  return apiData.value.dosen
+    .map((item: any) => item.nama_dosen)
+    .filter((name: string) => name !== formData.dosen2)
+})
+
+// Filter dosen options for Dosen 2 (exclude dosen1)
+const dosen2Options = computed(() => {
+  return apiData.value.dosen
+    .map((item: any) => item.nama_dosen)
+    .filter((name: string) => name !== formData.dosen1)
+})
+
+// Dropdown options from API
+const dropdownOptions = computed(() => ({
+  periodeTahunAjaran: apiData.value.periode.map((item: any) => item.periode),
   hari: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'],
   jenisJadwal: ['Jadwal Semester', 'Jadwal Ujian', 'Jadwal Pengganti'],
-  mataKuliah: DataMakul.map((item) => item.nama),
+  mataKuliah: apiData.value.makul.map((item: any) => item.nama_makul),
   status: ['Online', 'Offline'],
-  programStudi: DataProdi.map((item) => item.nama),
+  programStudi: apiData.value.prodi.map((item: any) => item.nama_prodi),
   kelas: ['A', 'B', 'C', 'D', 'E'],
-  dosen: DataDosen.map((item) => item.nama),
-  laboran: DataLaboran.map((item) => item.nama),
-  ruangKelas: DataRuangKelas.map((item) => item.nama),
+  dosen1: dosen1Options.value,
+  dosen2: dosen2Options.value,
+  laboran: apiData.value.laboran.map((item: any) => item.nama_laboran),
+  ruangKelas: apiData.value.ruangan.map((item: any) => item.kode_ruangan),
+}))
+
+// Helper function to get ID from selected value
+const getIdFromValue = (array: any[], value: string, nameKey: string) => {
+  const item = array.find((item) => item[nameKey] === value)
+  return item ? item.id : null
 }
 
+// Convert status string to number for API
+const getStatusValue = (status: string): number => {
+  return status === 'Online' ? 1 : 2
+}
+
+// Watch for changes and update IDs
+watch(
+  () => formData.periodeTahunAjaran,
+  (newValue) => {
+    selectedIds.periodeId = getIdFromValue(apiData.value.periode, newValue, 'periode')
+  },
+)
+
+watch(
+  () => formData.programStudi,
+  (newValue) => {
+    selectedIds.prodiId = getIdFromValue(apiData.value.prodi, newValue, 'nama_prodi')
+  },
+)
+
+watch(
+  () => formData.mataKuliah,
+  (newValue) => {
+    selectedIds.makulId = getIdFromValue(apiData.value.makul, newValue, 'nama_makul')
+  },
+)
+
+watch(
+  () => formData.dosen1,
+  (newValue) => {
+    selectedIds.dosen1Id = getIdFromValue(apiData.value.dosen, newValue, 'nama_dosen')
+  },
+)
+
+watch(
+  () => formData.dosen2,
+  (newValue) => {
+    selectedIds.dosen2Id = getIdFromValue(apiData.value.dosen, newValue, 'nama_dosen')
+  },
+)
+
+watch(
+  () => formData.laboran,
+  (newValue) => {
+    selectedIds.laboranId = getIdFromValue(apiData.value.laboran, newValue, 'nama_laboran')
+  },
+)
+
+watch(
+  () => formData.ruangKelas,
+  (newValue) => {
+    selectedIds.ruanganId = getIdFromValue(apiData.value.ruangan, newValue, 'kode_ruangan')
+  },
+)
+
+watch(
+  () => formData.status,
+  (newValue) => {
+    if (newValue === 'Online') {
+      formData.ruangKelas = ''
+      selectedIds.ruanganId = null
+      showError.ruangKelas = false
+    }
+  },
+)
+
 // Form submission
-const handleSubmit = () => {
+const handleSubmit = async () => {
   // Reset errors
   Object.keys(showError).forEach((key) => (showError[key as keyof typeof showError] = false))
 
   // Validate required fields
-  const requiredFields = Object.keys(showError)
+  const requiredFields = Object.keys(showError).filter((key) => {
+    if (key === 'ruangKelas' && isOnline.value) return false
+    return true
+  })
   const missingFields = requiredFields.filter((key) => !formData[key as keyof typeof formData])
 
   if (missingFields.length > 0) {
@@ -121,10 +251,33 @@ const handleSubmit = () => {
     return
   }
 
-  // Proceed submission
-  console.log('Form submitted', formData)
-  alert('Jadwal berhasil ditambahkan!')
-  router.push({ name: 'dashboard' })
+  // Prepare payload with IDs
+  const payload = {
+    periode_tahun_id: selectedIds.periodeId,
+    hari_jadwal: formData.hari,
+    jenis_jadwal: formData.jenisJadwal,
+    waktu_mulai: formData.waktuMulai,
+    waktu_selesai: formData.waktuSelesai,
+    makul_id: selectedIds.makulId,
+    status: getStatusValue(formData.status),
+    prodi_id: selectedIds.prodiId,
+    kelas: formData.kelas,
+    dosen_1: selectedIds.dosen1Id,
+    dosen_2: selectedIds.dosen2Id,
+    laboran_id: selectedIds.laboranId,
+    ...(isOnline.value ? {} : { ruangan_id: selectedIds.ruanganId }),
+  }
+
+  try {
+    const response = await dashboardAPI.createJadwal(payload)
+    console.log('Jadwal created successfully:', response.data)
+    success('Jadwal berhasil ditambahkan!')
+    router.push({ name: 'dashboard' })
+  } catch (error) {
+    console.log('Payload : ', payload)
+    console.error('Error creating jadwal:', error)
+    alert('Gagal menambahkan jadwal. Silakan coba lagi.')
+  }
 }
 
 // Cancel
@@ -134,6 +287,7 @@ const handleCancel = () => {
   }
 }
 
+// Clear error on field change
 Object.keys(formData).forEach((key) => {
   watch(
     () => formData[key as keyof typeof formData],
@@ -151,7 +305,21 @@ Object.keys(formData).forEach((key) => {
       Isi form di bawah untuk menambahkan jadwal perkuliahan
     </p>
   </div>
-  <div class="bg-white rounded-xl shadow-lg p-8">
+
+  <!-- Loading state -->
+  <div v-if="isLoading" class="bg-white rounded-xl shadow-lg p-8">
+    <div class="flex items-center justify-center py-12">
+      <div class="text-center">
+        <div
+          class="animate-spin rounded-full h-12 w-12 border-b-2 border-active-blue mx-auto mb-4"
+        ></div>
+        <p class="text-gray-600">Memuat data...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div v-else class="bg-white rounded-xl shadow-lg p-8">
     <form @submit.prevent="handleSubmit">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Periode Tahun Ajaran -->
@@ -263,7 +431,7 @@ Object.keys(formData).forEach((key) => {
         <!-- Dosen 1 -->
         <CustomDropdown
           v-model="formData.dosen1"
-          :options="dropdownOptions.dosen"
+          :options="dropdownOptions.dosen1"
           placeholder="Pilih dosen 1"
           label="Dosen 1"
           :searchable="true"
@@ -275,7 +443,7 @@ Object.keys(formData).forEach((key) => {
         <!-- Dosen 2 -->
         <CustomDropdown
           v-model="formData.dosen2"
-          :options="dropdownOptions.dosen"
+          :options="dropdownOptions.dosen2"
           placeholder="Pilih dosen 2"
           label="Dosen 2"
           :searchable="true"
@@ -298,12 +466,14 @@ Object.keys(formData).forEach((key) => {
 
         <!-- Ruang Kelas -->
         <CustomDropdown
+          v-if="!isOnline"
           v-model="formData.ruangKelas"
           :options="dropdownOptions.ruangKelas"
           placeholder="Pilih ruang kelas"
           label="Ruang Kelas"
           :searchable="true"
           :clearable="true"
+          :required="!isOnline"
           :showError="showError.ruangKelas"
         />
       </div>

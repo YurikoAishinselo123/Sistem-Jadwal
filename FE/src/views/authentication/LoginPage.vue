@@ -48,15 +48,13 @@ const handleLogin = async () => {
     localStorage.setItem('isAuthenticated', 'true')
     router.push({ name: 'dashboard' })
   } catch (error: any) {
-    console.error('FULL LOGIN ERROR:', error)
+    apiError.value = ''
 
-    // Handle different types of errors
-    if (error.response?.status === 401) {
-      apiError.value = 'Username atau password salah'
-    } else if (error.response?.status === 422) {
-      apiError.value = 'Akun tidak ditemukan. Silakan daftar terlebih dahulu'
-    } else if (error.response?.status === 500) {
-      apiError.value = 'Terjadi kesalahan pada server, silakan coba lagi'
+    if (error.response.data) {
+      const errors = error.response.data
+      apiError.value = errors
+    } else {
+      apiError.value = 'Terjadi kesalahan, silakan coba lagi.'
     }
   }
 }
