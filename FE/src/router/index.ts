@@ -99,11 +99,11 @@ const routes = [
         name: 'masterDataRuangKelas',
         component: MasterDataRuangKelas,
       },
-      {
-        path: 'waktu-perkuliahan',
-        name: 'masterDataWaktuPerkuliahan',
-        component: MasterDataWaktuPerkuliahan,
-      },
+      // {
+      //   path: 'waktu-perkuliahan',
+      //   name: 'masterDataWaktuPerkuliahan',
+      //   component: MasterDataWaktuPerkuliahan,
+      // },
       {
         path: 'tahun-ajaran',
         name: 'masterDataTahunAjaran',

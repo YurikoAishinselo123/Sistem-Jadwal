@@ -63,11 +63,11 @@ const tabs = [
   { id: 'laboran', label: 'Daftar Laboran', routeName: 'masterDataLaboran' },
   { id: 'prodi', label: 'Daftar Prodi', routeName: 'masterDataProdi' },
   { id: 'ruangKelas', label: 'Daftar Ruang Kelas', routeName: 'masterDataRuangKelas' },
-  {
-    id: 'waktuPerkuliahan',
-    label: 'Daftar Waktu Perkuliahan',
-    routeName: 'masterDataWaktuPerkuliahan',
-  },
+  // {
+  //   id: 'waktuPerkuliahan',
+  //   label: 'Daftar Waktu Perkuliahan',
+  //   routeName: 'masterDataWaktuPerkuliahan',
+  // },
   { id: 'tahunAjaran', label: 'Daftar Periode Tahun Ajaran', routeName: 'masterDataTahunAjaran' },
 ]
 
