@@ -11,6 +11,8 @@ interface IMakul {
   id: number | null
   kode: string
   nama: string
+  jenis: string
+  sks: number
 }
 
 // ================== STATE ==================
@@ -19,9 +21,16 @@ const showModal = ref(false)
 const isEdit = ref(false)
 const editingId = ref<number | null>(null)
 
-const modalData = ref({
+const modalData = ref<{
+  kode: string
+  nama: string
+  jenis: string
+  sks: number | null
+}>({
   kode: '',
   nama: '',
+  jenis: '',
+  sks: null,
 })
 
 // ================== MODAL FIELDS ==================
@@ -37,6 +46,18 @@ const makulFields = [
     label: 'Nama Mata Kuliah',
     placeholder: 'Masukkan nama mata kuliah',
     type: 'text',
+  },
+  {
+    name: 'jenis',
+    label: 'Jenis Mata Kuliah',
+    placeholder: 'Masukkan jenis mata kuliah',
+    type: 'text',
+  },
+  {
+    name: 'sks',
+    label: 'Jumlah SKS Mata Kuliah',
+    placeholder: 'Masukkan jumlah SKS mata kuliah',
+    type: 'number',
   },
 ]
 
@@ -57,6 +78,8 @@ async function loadFromAPI() {
           id: item.id ?? null,
           kode: item.kode_makul ?? '',
           nama: item.nama_makul ?? '',
+          jenis: item.jenis_makul ?? '',
+          sks: Number(item.sks_makul) || 0,
         }),
       )
   } catch (err) {
@@ -73,6 +96,8 @@ const handleAdd = () => {
   modalData.value = {
     kode: '',
     nama: '',
+    jenis: '',
+    sks: 0,
   }
 
   showModal.value = true
@@ -89,17 +114,21 @@ async function handleEdit(index: number) {
   modalData.value = {
     kode: makul.kode,
     nama: makul.nama,
+    jenis: makul.jenis,
+    sks: makul.sks,
   }
 
   showModal.value = true
 }
 
 // ================== SUBMIT (ADD + EDIT) ==================
-async function handleSubmit(data: { kode: string; nama: string }) {
+async function handleSubmit(data: { kode: string; nama: string; jenis: string; sks: number }) {
   try {
     const payload = {
       kode_makul: data.kode,
       nama_makul: data.nama,
+      jenis_makul: data.jenis,
+      sks_makul: data.sks,
     }
 
     if (isEdit.value && editingId.value) {
@@ -145,15 +174,15 @@ onMounted(loadFromAPI)
 
 <template>
   <MasterDataTable
-    :columns="['Kode Makul', 'Nama Mata Kuliah']"
-    :dataKeys="['kode', 'nama']"
+    :columns="['Kode Makul', 'Nama Mata Kuliah', 'Jenis Makul', 'SKS Makul']"
+    :dataKeys="['kode', 'nama', 'jenis', 'sks']"
     :items="makulList"
     :searchKeys="['kode', 'nama']"
     :searchPlaceholder="'Cari berdasarkan kode atau nama mata kuliah...'"
     @add="handleAdd"
     @edit="handleEdit"
     @delete="handleDelete"
-    :columnSizes="['150px', '1fr']"
+    :columnSizes="['150px', '180px', '150px', '1fr']"
     :show-default-actions="true"
     addLabel="Mata Kuliah"
   />
