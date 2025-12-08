@@ -25,12 +25,14 @@
               :label="field.label"
             />
 
-            <!-- Normal input -->
             <input
               v-else
               v-model="formData[field.name]"
               :type="field.type || 'text'"
               :placeholder="field.placeholder"
+              :min="field.min"
+              :max="field.max"
+              :step="field.type === 'time' ? 60 : undefined"
               @input="
                 field.name === 'kode'
                   ? (formData[field.name] = formData[field.name].toUpperCase())
@@ -81,6 +83,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  data: {
+    type: Object,
+    default: () => ({}),
+  },
   submitText: {
     type: String,
     default: 'Tambah',
@@ -104,7 +110,17 @@ watch(
   { immediate: true },
 )
 
+watch(
+  () => props.data,
+  (newData) => {
+    if (!newData) return
+    Object.assign(formData, newData)
+  },
+  { immediate: true, deep: true },
+)
+
 const closeModal = () => {
+  Object.keys(formData).forEach((key) => (formData[key] = ''))
   emit('update:modelValue', false)
 }
 
