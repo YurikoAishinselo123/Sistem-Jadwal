@@ -105,7 +105,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  options: { type: Array as () => string[], required: true },
+  options: { type: Array as () => any[], required: true },
   placeholder: { type: String, default: 'Select...' },
   searchable: { type: Boolean, default: false },
   label: { type: String, default: '' },
