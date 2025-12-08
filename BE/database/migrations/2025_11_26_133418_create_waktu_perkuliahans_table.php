@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->time('jam');
-            $table->string('jam');
+            $table->string('sesi');
         });
     }
 
