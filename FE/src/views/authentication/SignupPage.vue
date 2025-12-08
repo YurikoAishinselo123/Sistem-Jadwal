@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import CustomFormInput from '@/components/CustomFormInput.vue'
 import { authenticationAPI } from '@/services/authenticationAPI'
 
 const router = useRouter()
+
 const username = ref('')
 const email = ref('')
 const password = ref('')
@@ -43,45 +44,32 @@ const handleSignup = async () => {
       name: username.value,
       password: password.value,
     }
-    console.log('Sending payload:', payload)
-    const res = await authenticationAPI.signup(payload)
 
-    console.log('FULL RESPONSE:', res)
-    console.log('RESPONSE DATA:', res.data)
+    await authenticationAPI.signup(payload)
 
-    // Check different possible response structures
-    const token = res.data?.token || res.data?.data?.token
-    const user = res.data?.user || res.data?.data?.user
+    router.push({ name: 'login', query: { registered: 'true' } })
+  } catch (err: any) {
+    console.error(err)
 
-    if (token) {
-      localStorage.setItem('token', token)
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user))
-      }
-      localStorage.setItem('isAuthenticated', 'true')
-
-      console.log('Registration successful, redirecting to dashboard...')
-
-      // Force redirect to dashboard
-      await router.push({ name: 'dashboard' })
-    } else {
-      console.warn('No token received in response')
-      apiError.value = 'Pendaftaran berhasil, silakan login'
-      setTimeout(() => {
-        router.push({ name: 'login' })
-      }, 2000)
-    }
-  } catch (error: any) {
     apiError.value = ''
-
-    if (error.response && error.response.data?.errors) {
-      const errors = error.response.data.errors
-
-      // Convert object -> array -> string
+    if (err.response && err.response.data?.errors) {
+      const errors = err.response.data.errors
       apiError.value = Object.values(errors).flat().join('\n')
     } else {
       apiError.value = 'Terjadi kesalahan, silakan coba lagi.'
     }
+
+    // if (err.response?.data?.errors) {
+    //   // Flatten backend validation errors
+    //   apiError.value = Object.values(err.response.data.errors).flat().join('\n')
+    //   error(apiError.value)
+    // } else if (err.response?.data?.message) {
+    //   apiError.value = err.response.data.message
+    //   error(apiError.value)
+    // } else {
+    //   apiError.value = 'Terjadi kesalahan, silakan coba lagi.'
+    //   error(apiError.value)
+    // }
   }
 }
 </script>

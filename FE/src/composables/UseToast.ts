@@ -17,12 +17,17 @@ export function useToast() {
   const showToast = (
     message: string,
     type: 'success' | 'error' | 'warning' | 'info' = 'success',
+    duration = 2000,
   ) => {
     toastState.value = {
       show: true,
       type,
       message,
     }
+
+    setTimeout(() => {
+      toastState.value.show = false
+    }, duration)
   }
 
   const hideToast = () => {

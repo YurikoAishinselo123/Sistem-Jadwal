@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import AuthLayout from '@/layouts/AuthLayout.vue'
 import CustomFormInput from '@/components/CustomFormInput.vue'
 import { authenticationAPI } from '@/services/authenticationAPI'
+import { useToast } from '@/composables/UseToast'
 
 const router = useRouter()
+const route = useRoute()
+const { success, error } = useToast()
 const username = ref('')
 const password = ref('')
 const successMessage = ref<string | undefined>(undefined)
@@ -58,6 +61,12 @@ const handleLogin = async () => {
     }
   }
 }
+
+onMounted(() => {
+  if (route.query.registered === 'true') {
+    success('Pendaftaran berhasil! Silakan login.')
+  }
+})
 </script>
 
 <template>

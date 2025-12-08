@@ -31,7 +31,6 @@ const { toastState, hideToast } = useToast()
 
 <style scoped>
 @media print {
-  /* Hide sidebar & top UI in ALL browsers (Safari safe) */
   .no-print {
     display: none !important;
   }
