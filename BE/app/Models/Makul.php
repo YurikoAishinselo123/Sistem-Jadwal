@@ -13,6 +13,9 @@ class Makul extends Model
         protected $fillable = [
         'kode_makul',
         'nama_makul',
+        'jenis_makul',
+        'sks_makul',
+        'sesi_makul',
     ];
     
     public function jadwal():HasMany{

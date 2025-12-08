@@ -32,9 +32,25 @@ class MakulController extends Controller implements HasMiddleware
         $fields=$request->validate([
             'kode_makul' => 'required',
             'nama_makul' => 'required',
-        ]);//
+            'jenis_makul' => 'required',
+            'sks_makul' => 'required',
+        ]);
+        if($request->jenis_makul == 'praktik'){
+            $total_sesi = $request->sks_makul *3;
+        } else if($request->jenis_makul == 'teori'){
+            $total_sesi = $request->sks_makul;
+        } else{
+            return response('jenis makul tidak valid', 422);
+        }
+        
 
-        $makul = Makul::create($fields);
+        $makul = Makul::create([
+            'kode_makul' => $fields['kode_makul'],
+            'nama_makul' => $fields['nama_makul'],
+            'jenis_makul' => $fields['jenis_makul'],
+            'sks_makul' => $fields['sks_makul'],
+            'sesi_makul' => $total_sesi
+        ]);
         return ['makul' => $makul];//
         //
     }

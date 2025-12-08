@@ -37,7 +37,7 @@ class DataController extends Controller
     public function getInputData(){
         $periode = PeriodeTahun::select('id','periode')->distinct()->get();
         $prodi = Prodi::select('id','nama_prodi')->distinct()->get();
-        $makul = Makul::select('id','nama_makul')->distinct()->get();
+        $makul = Makul::select('id','nama_makul','sesi_makul')->distinct()->get();
         $dosen = Dosen::select('id', 'nama_dosen')->distinct()->get();
         $laboran = Laboran::select('id', 'nama_laboran')->distinct()->get();;
         $ruangan = Ruangan::select('id', 'kode_ruangan')->distinct()->get();;

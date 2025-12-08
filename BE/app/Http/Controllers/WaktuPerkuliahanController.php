@@ -24,6 +24,7 @@ class WaktuPerkuliahanController extends Controller
     {
         $fields=$request->validate([
             'jam' => 'required',
+            'sesi' => 'required',
         ]);//
 
         $input = WaktuPerkuliahan::create($fields);
@@ -46,6 +47,7 @@ class WaktuPerkuliahanController extends Controller
     {
         $fields=$request->validate([
             'jam' => 'required',
+            'sesi' => 'required',
         ]);//
 
         $waktuPerkuliahan->update($fields);
