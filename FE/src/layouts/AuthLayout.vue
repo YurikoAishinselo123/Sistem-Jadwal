@@ -15,16 +15,17 @@
         {{ successMessage }}
       </div>
 
-      <!-- Form slot -->
-      <slot name="form"></slot>
+      <form @submit.prevent="$emit('submit')">
+        <slot name="form"></slot>
 
-      <!-- Button -->
-      <button
-        @click="$emit('submit')"
-        class="w-full bg-active-blue hover:bg-[#004884] text-white font-semibold py-3 rounded-lg mt-8 transition"
-      >
-        {{ buttonText }}
-      </button>
+        <!-- Submit button -->
+        <button
+          type="submit"
+          class="w-full bg-active-blue hover:bg-[#004884] text-white font-semibold py-3 rounded-lg mt-8 transition"
+        >
+          {{ buttonText }}
+        </button>
+      </form>
 
       <!-- Footer -->
       <div class="text-center mt-6 text-sm text-black">
@@ -34,10 +35,22 @@
         </router-link>
       </div>
     </div>
+    <ToastNotification
+      class="no-print"
+      :show="toastState.show"
+      :type="toastState.type"
+      :message="toastState.message"
+      @close="hideToast"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import ToastNotification from '@/components/ToastNotification.vue'
+import { useToast } from '@/composables/UseToast'
+
+const { toastState, hideToast } = useToast()
+
 defineProps<{
   title: string
   subtitle: string
