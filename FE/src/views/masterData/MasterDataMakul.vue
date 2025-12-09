@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import MasterDataTable from '@/components/MasterDataTable.vue'
 import MasterDataModal from '@/components/MasterDataModal.vue'
 import MasterDataAPI from '@/services/masterDataAPI'
@@ -33,6 +33,27 @@ const modalData = ref<{
   sks: null,
 })
 
+// ================== SKS VALIDATION ==================
+// Get max SKS based on selected jenis
+const maxSks = computed(() => {
+  if (!modalData.value.jenis) return 9 // Default max
+  return modalData.value.jenis.toLowerCase() === 'praktik' ? 3 : 9
+})
+
+// Validate SKS when jenis or sks changes
+const validateSks = () => {
+  if (modalData.value.sks !== null) {
+    const max = maxSks.value
+    if (modalData.value.sks > max) {
+      modalData.value.sks = max
+      error(`SKS maksimal untuk ${modalData.value.jenis} adalah ${max}`)
+    }
+    if (modalData.value.sks < 1) {
+      modalData.value.sks = 1
+    }
+  }
+}
+
 // ================== MODAL FIELDS ==================
 const makulFields = [
   {
@@ -50,14 +71,23 @@ const makulFields = [
   {
     name: 'jenis',
     label: 'Jenis Mata Kuliah',
-    placeholder: 'Masukkan jenis mata kuliah',
-    type: 'text',
+    placeholder: 'Pilih jenis mata kuliah',
+    type: 'dropdown',
+    options: ['Praktik', 'Teori'],
   },
   {
     name: 'sks',
     label: 'Jumlah SKS Mata Kuliah',
     placeholder: 'Masukkan jumlah SKS mata kuliah',
     type: 'number',
+    min: 1,
+    max: maxSks,
+    onChange: validateSks,
+    helperText: computed(() => {
+      if (!modalData.value.jenis) return 'Pilih jenis mata kuliah terlebih dahulu'
+      const max = maxSks.value
+      return `Maksimal ${max} SKS untuk ${modalData.value.jenis}`
+    }),
   },
 ]
 
@@ -78,7 +108,9 @@ async function loadFromAPI() {
           id: item.id ?? null,
           kode: item.kode_makul ?? '',
           nama: item.nama_makul ?? '',
-          jenis: item.jenis_makul ?? '',
+          jenis: item.jenis_makul
+            ? item.jenis_makul.charAt(0).toUpperCase() + item.jenis_makul.slice(1)
+            : '',
           sks: Number(item.sks_makul) || 0,
         }),
       )
@@ -97,7 +129,7 @@ const handleAdd = () => {
     kode: '',
     nama: '',
     jenis: '',
-    sks: 0,
+    sks: null,
   }
 
   showModal.value = true
@@ -106,7 +138,7 @@ const handleAdd = () => {
 // ================== Edit ==================
 async function handleEdit(index: number) {
   const makul = makulList.value[index]
-  if (!makul) return error('Data laboran tidak ditemukan')
+  if (!makul) return error('Data mata kuliah tidak ditemukan')
 
   isEdit.value = true
   editingId.value = makul.id
@@ -124,10 +156,20 @@ async function handleEdit(index: number) {
 // ================== SUBMIT (ADD + EDIT) ==================
 async function handleSubmit(data: { kode: string; nama: string; jenis: string; sks: number }) {
   try {
+    // Validate SKS before submitting
+    const max = data.jenis.toLowerCase() === 'praktik' ? 3 : 9
+    if (data.sks > max) {
+      return error(`SKS tidak boleh lebih dari ${max} untuk jenis ${data.jenis}`)
+    }
+    if (data.sks < 1) {
+      return error('SKS minimal adalah 1')
+    }
+
+    // Convert jenis to lowercase for API
     const payload = {
       kode_makul: data.kode,
       nama_makul: data.nama,
-      jenis_makul: data.jenis,
+      jenis_makul: data.jenis.toLowerCase(), // Convert to lowercase
       sks_makul: data.sks,
     }
 
@@ -141,17 +183,20 @@ async function handleSubmit(data: { kode: string; nama: string; jenis: string; s
 
     await loadFromAPI()
     showModal.value = false
-  } catch (err) {
-    error(isEdit.value ? 'Gagal mengubah data makul' : 'Gagal menambahkan makul')
+  } catch (err: any) {
+    const message =
+      err?.response?.data?.message ||
+      (isEdit.value ? 'Gagal mengubah data makul' : 'Gagal menambahkan makul')
+    error(message)
   }
 }
 
 // Delete Mata Kuliah
 async function handleDelete(index: number) {
   const makul = makulList.value[index]
-  if (!makul) return error('Data Kuliah tidak ditemukan')
+  if (!makul) return error('Data Mata Kuliah tidak ditemukan')
 
-  if (!confirm(`Hapus Kuliah "${makul.nama}"?`)) return
+  if (!confirm(`Hapus Mata Kuliah "${makul.nama}"?`)) return
   try {
     const response = await MasterDataAPI.delete('makul', makul.id!)
 
@@ -163,7 +208,7 @@ async function handleDelete(index: number) {
     success('Mata Kuliah berhasil dihapus!')
     await loadFromAPI()
   } catch (err: any) {
-    const message = err?.response?.data?.message || 'Gagal menghapus data laboran'
+    const message = err?.response?.data?.message || 'Gagal menghapus data mata kuliah'
     error(message)
   }
 }

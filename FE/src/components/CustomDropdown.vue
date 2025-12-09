@@ -112,7 +112,7 @@ const props = defineProps({
   clearable: { type: Boolean, default: true },
   clearText: { type: String, default: 'Kosongkan pilihan' },
   required: { type: Boolean, default: false },
-  showError: { type: Boolean, default: false }, // controlled by parent
+  showError: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
