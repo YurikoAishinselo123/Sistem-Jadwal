@@ -9,8 +9,8 @@
     <!-- Dosen Selector -->
     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
       <CustomDropdown
-        v-model="selectedDosen"
-        :options="dosenOptions"
+        v-model="selectedDosenName"
+        :options="dosenDropdownOptions"
         placeholder="Pilih dosen untuk melihat beban kerja dosen"
         label="Dosen"
         :searchable="true"
@@ -19,9 +19,9 @@
     </div>
 
     <!-- Workload Summary Card -->
-    <div v-if="selectedDosen" :class="`${cardBgColor} rounded-xl shadow-lg p-8 mb-6 text-white`">
+    <div v-if="selectedDosenId" :class="`${cardBgColor} rounded-xl shadow-lg p-8 mb-6 text-white`">
       <div class="flex items-center gap-6">
-        <!-- Icon Cell -->
+        <!-- Icon -->
         <div class="bg-white rounded-full p-4 flex items-center justify-center w-16 h-16">
           <svg
             class="w-8 h-8"
@@ -39,9 +39,9 @@
           </svg>
         </div>
 
-        <!-- Text Cell -->
+        <!-- Text -->
         <div class="flex flex-col justify-center">
-          <h2 class="text-lg font-medium mb-2">Total Beban Kerja {{ selectedDosen }}</h2>
+          <h2 class="text-lg font-medium mb-2">Total Beban Kerja {{ selectedDosenName }}</h2>
           <div class="text-2xl sm:text-3xl font-bold">
             {{ totalSKS }} SKS | {{ totalSesi }} Sesi / Minggu
           </div>
@@ -49,18 +49,18 @@
       </div>
     </div>
 
-    <!-- Schedule Table using DashboardTable Component -->
-    <div v-if="selectedDosen">
+    <!-- Schedule Table -->
+    <div v-if="selectedDosenId">
       <DashboardTable
         :columns="columns"
-        :data="filteredSchedules"
+        :data="scheduleData"
         :has-actions="false"
         empty-message="Tidak ada jadwal ditemukan untuk dosen ini"
         @print="handlePrint"
       />
     </div>
 
-    <!-- Empty State - No Dosen Selected -->
+    <!-- Empty State -->
     <div v-else class="bg-white rounded-xl shadow-lg p-12 text-center">
       <img :src="Room_icon" class="w-20 mx-auto" />
       <p class="text-gray-500 mt-6">Pilih dosen untuk melihat beban kerja mengajar</p>
@@ -69,29 +69,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import CustomDropdown from '@/components/CustomDropdown.vue'
 import DashboardTable from '@/components/DashboardTable.vue'
 import Room_icon from '../assets/image/Room_icon.svg'
+import { bebanDosenAPI } from '@/services/bebanDosenAPI'
+import { useToast } from '@/composables/UseToast'
 
-// Define schedule interface
+const { error } = useToast()
+
 interface ISchedule {
+  id: number
+  periode: string
   hari: string
-  kodeMakul: string
-  programStudi: string
+  prodi: string
   mataKuliah: string
-  dosen: string
   ruang: string
   waktu: string
   sks: string
   sesi: string
 }
 
+interface IFilterSchedule {
+  id: number
+  nama: string
+}
+
 // Table columns
 const columns = ref([
+  { key: 'periode', label: 'Periode' },
   { key: 'hari', label: 'Hari' },
-  { key: 'kodeMakul', label: 'Kode Makul' },
-  { key: 'programStudi', label: 'Program Studi' },
+  { key: 'prodi', label: 'Program Studi' },
   { key: 'mataKuliah', label: 'Mata Kuliah' },
   { key: 'sks', label: 'SKS' },
   { key: 'sesi', label: 'Sesi' },
@@ -99,125 +107,124 @@ const columns = ref([
   { key: 'waktu', label: 'Waktu' },
 ])
 
-// Selected dosen
-const selectedDosen = ref('')
+// State
+const selectedDosenName = ref<string>('')
+const selectedDosenId = ref<number | null>(null)
+const dosenOptions = ref<IFilterSchedule[]>([])
+const scheduleData = ref<ISchedule[]>([])
+const loading = ref(false)
 
-// Dosen options
-const dosenOptions = [
-  'Dr. Suryo, S.Pd, M.Pd',
-  'Adhe Aryswan, S.Pd., M.Si.',
-  'Haposan Vincentius, S.T., M.Sc.',
-  'Dr. Budi Santoso, M.Kom.',
-  'Prof. Siti Rahayu, Ph.D.',
-]
+// Dropdown options - just the names
+const dosenDropdownOptions = computed(() => dosenOptions.value.map((d) => d.nama))
 
-// Sample schedule data
-const scheduleData = ref<ISchedule[]>([
-  {
-    hari: 'Sabtu',
-    kodeMakul: 'FK1KP',
-    programStudi: 'Mesin A',
-    mataKuliah: 'Pengantar Teknik Perkapalan',
-    dosen: 'Dr. Suryo, S.Pd, M.Pd',
-    ruang: '108 B',
-    waktu: '07:00 - 09:30',
-    sks: '4 SKS',
-    sesi: '6 Sesi',
-  },
-  {
-    hari: 'Senin',
-    kodeMakul: 'TI101',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Algoritma',
-    dosen: 'Adhe Aryswan, S.Pd., M.Si.',
-    ruang: '201 A',
-    waktu: '09:30 - 12:00',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-  {
-    hari: 'Selasa',
-    kodeMakul: 'TI102',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Pemrograman',
-    dosen: 'Adhe Aryswan, S.Pd., M.Si.',
-    ruang: '202 B',
-    waktu: '13:00 - 15:30',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-  {
-    hari: 'Rabu',
-    kodeMakul: 'TI103',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Basis Data',
-    dosen: 'Haposan Vincentius, S.T., M.Sc.',
-    ruang: '301 A',
-    waktu: '07:00 - 09:30',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-  {
-    hari: 'Kamis',
-    kodeMakul: 'TI104',
-    programStudi: 'Teknik Informatika',
-    mataKuliah: 'Jaringan Komputer',
-    dosen: 'Haposan Vincentius, S.T., M.Sc.',
-    ruang: '302 B',
-    waktu: '13:00 - 15:30',
-    sks: '3 SKS',
-    sesi: '4 Sesi',
-  },
-])
+// Load dosen list
+onMounted(async () => {
+  try {
+    const response = await bebanDosenAPI.getDosen()
+    const rawData = response.data
 
-// Filtered schedules by selected dosen
-const filteredSchedules = computed(() =>
-  scheduleData.value.filter((s) => s.dosen === selectedDosen.value),
-)
+    if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+      dosenOptions.value = []
+      return
+    }
 
-// Total SKS
-const totalSKS = computed(() =>
-  filteredSchedules.value.reduce((sum, s) => sum + (parseInt(s.sks.replace(' SKS', '')) || 0), 0),
-)
-
-// Total sessions per week
-const totalSesi = computed(() =>
-  filteredSchedules.value.reduce((sum, s) => sum + (parseInt(s.sesi.replace(' Sesi', '')) || 0), 0),
-)
-
-// Dynamic card background color
-const cardBgColor = computed(() => {
-  if (totalSesi.value === 40) return 'bg-[#D00000]' // Bright red
-  if (totalSesi.value > 25) return 'bg-[#D08700]' // Warm yellow
-  return 'bg-green-emerald' // Default green
+    dosenOptions.value = rawData
+      .filter((item: any) => item)
+      .map(
+        (item: any): IFilterSchedule => ({
+          id: item.id ?? null,
+          nama: item.nama_dosen ?? '',
+        }),
+      )
+  } catch (err) {
+    dosenOptions.value = []
+    error('Gagal memuat data dosen')
+  }
 })
 
-// Optional: icon color based on background
+// Watch for name changes and get the ID
+watch(selectedDosenName, async (nama) => {
+  if (!nama) {
+    scheduleData.value = []
+    selectedDosenId.value = null
+    return
+  }
+
+  // Find the ID from the name
+  const dosen = dosenOptions.value.find((d) => d.nama === nama)
+  if (!dosen) {
+    selectedDosenId.value = null
+    return
+  }
+
+  selectedDosenId.value = dosen.id
+  loading.value = true
+
+  try {
+    const response = await bebanDosenAPI.getDosenById(dosen.id)
+    const rawData = response.data
+
+    if (!rawData || !Array.isArray(rawData) || rawData.length === 0) {
+      scheduleData.value = []
+      return
+    }
+
+    scheduleData.value = rawData.map((item: any) => ({
+      id: item.id,
+      periode: item.periode ?? '-',
+      hari: item.hari_jadwal,
+      prodi: item.nama_prodi ?? '-',
+      mataKuliah: item.nama_makul ?? '-',
+      ruang: item.nama_ruangan ?? '-',
+      waktu: `${item.waktu_mulai} - ${item.waktu_selesai}`,
+      sks: item.sks_makul ? `${item.sks_makul} SKS` : '-',
+      sesi: item.sesi_makul ? `${item.sesi_makul} Sesi` : '-',
+    }))
+  } catch (err) {
+    console.error('Failed to load schedule:', err)
+    scheduleData.value = []
+    error('Gagal memuat jadwal dosen')
+  } finally {
+    loading.value = false
+  }
+})
+
+// Compute totals
+const totalSKS = computed(() =>
+  scheduleData.value.reduce((sum, s) => sum + (parseInt(s.sks.replace(' SKS', '')) || 0), 0),
+)
+
+const totalSesi = computed(() =>
+  scheduleData.value.reduce((sum, s) => sum + (parseInt(s.sesi.replace(' Sesi', '')) || 0), 0),
+)
+
+// Colors
+const cardBgColor = computed(() => {
+  if (totalSesi.value >= 40) return 'bg-[#D00000]'
+  if (totalSesi.value > 25) return 'bg-[#D08700]'
+  return 'bg-green-emerald'
+})
+
 const iconColor = computed(() => {
-  if (totalSesi.value >= 25) return 'text-white'
+  if (totalSesi.value >= 40) return 'text-red-600'
   return 'text-green-600'
 })
 
-// Print handler
+// Print
 const handlePrint = () => window.print()
 </script>
 
 <style scoped>
 @media print {
-  /* Hide dropdown selector when printing */
   .bg-white.rounded-xl.shadow-lg.p-6.mb-8 {
     display: none;
   }
-
-  /* Optimize table for printing */
   .overflow-x-auto {
     overflow: visible;
   }
-
   table {
     page-break-inside: auto;
   }
-
   tr {
     page-break-inside: avoid;
     page-break-after: auto;

@@ -281,9 +281,9 @@ const getIdFromValue = <T extends { id: number }>(
 }
 
 // Convert status string to number for API
-const getStatusValue = (status: string): number => {
-  return status === 'Online' ? 1 : 2
-}
+// const getStatusValue = (status: string): number => {
+//   return status === 'Online' ? 1 : 2
+// }
 
 // Watch for changes and update IDs
 watch(
@@ -387,7 +387,7 @@ const handleSubmit = async () => {
     waktu_mulai: formData.waktuMulai,
     waktu_selesai: formData.waktuSelesai,
     makul_id: selectedIds.makulId,
-    status: getStatusValue(formData.status),
+    status: formData.status,
     prodi_id: selectedIds.prodiId,
     kelas: formData.kelas,
     dosen_1: selectedIds.dosen1Id,
