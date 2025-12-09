@@ -1,4 +1,3 @@
-<!-- ReusableModal.vue -->
 <template>
   <div
     v-if="modelValue"
@@ -12,13 +11,15 @@
       <form @submit.prevent="handleSubmit">
         <div class="space-y-4">
           <div v-for="field in fields" :key="field.name">
-            <label v-if="field.type !== 'select'" class="block text-sm font-medium mb-2 text-black">
+            <label
+              v-if="field.type !== 'dropdown'"
+              class="block text-sm font-medium mb-2 text-black"
+            >
               {{ field.label }}
             </label>
 
-            <!-- Select input -->
             <CustomDropdown
-              v-if="field.type === 'select'"
+              v-if="field.type === 'dropdown'"
               v-model="formData[field.name]"
               :options="field.options || []"
               :placeholder="field.placeholder"
@@ -66,7 +67,7 @@
 </template>
 
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import CustomDropdown from './CustomDropdown.vue'
 
 const props = defineProps({
@@ -97,7 +98,10 @@ const emit = defineEmits(['update:modelValue', 'submit'])
 
 const formData = reactive({})
 
-// Initialize formData with empty values
+// 🔥 NEW — inline validation state
+const validationErrors = ref({}) // 🔥 CHANGED
+
+// Initialize formData when fields change
 watch(
   () => props.fields,
   (newFields) => {
@@ -110,6 +114,7 @@ watch(
   { immediate: true },
 )
 
+// Populate formData when editing existing data
 watch(
   () => props.data,
   (newData) => {
@@ -120,15 +125,35 @@ watch(
 )
 
 const closeModal = () => {
+  // 🔥 Clear fields
   Object.keys(formData).forEach((key) => (formData[key] = ''))
+
+  // 🔥 Clear validation errors
+  validationErrors.value = {} // 🔥 CHANGED
+
   emit('update:modelValue', false)
 }
 
 const handleSubmit = () => {
+  // 🔥 Reset previous errors
+  validationErrors.value = {} // 🔥 CHANGED
+
+  // 🔥 Inline required-field validation
+  props.fields.forEach((field) => {
+    const value = formData[field.name]
+
+    if (field.required !== false && (!value || value === '')) {
+      validationErrors.value[field.name] = `${field.label} wajib diisi` // 🔥 CHANGED
+    }
+  })
+
+  // 🔥 Stop submit if there are validation issues
+  if (Object.keys(validationErrors.value).length > 0) {
+    return
+  }
+
+  // If no errors → submit
   emit('submit', { ...formData })
-  // Reset form
-  Object.keys(formData).forEach((key) => (formData[key] = ''))
-  closeModal()
 }
 </script>
 
