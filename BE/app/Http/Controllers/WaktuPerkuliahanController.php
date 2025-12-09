@@ -24,6 +24,7 @@ class WaktuPerkuliahanController extends Controller
     {
         $fields=$request->validate([
             'jam' => 'required',
+            'sesi' => 'required',
         ]);//
 
         $input = WaktuPerkuliahan::create($fields);
@@ -46,10 +47,11 @@ class WaktuPerkuliahanController extends Controller
     {
         $fields=$request->validate([
             'jam' => 'required',
+            'sesi' => 'required',
         ]);//
 
-        $input = WaktuPerkuliahan::update($fields);
-        return ['Waktu' => $input];//
+        $waktuPerkuliahan->update($fields);
+        return ['Waktu' => $waktuPerkuliahan];//
         //
     }
 
@@ -59,5 +61,13 @@ class WaktuPerkuliahanController extends Controller
     public function destroy(WaktuPerkuliahan $waktuPerkuliahan)
     {
         $waktuPerkuliahan->delete();//
+    }
+
+    public function jadwalPagi(){
+        return WaktuPerkuliahan::select('jam')->where('sesi','Pagi')->get();
+    }
+    
+    public function jadwalMalam(){
+        return WaktuPerkuliahan::select('jam')->where('sesi','Malam')->get();
     }
 }

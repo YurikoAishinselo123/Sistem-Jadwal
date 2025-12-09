@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DataController;
 use App\Http\Controllers\DosenController;
-use App\Http\Controllers\FilterController;
 use App\Http\Controllers\JadwalController;
 use App\Http\Controllers\LaboranController;
 use App\Http\Controllers\MakulController;
@@ -29,4 +29,7 @@ Route::apiResource('waktu', WaktuPerkuliahanController::class);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-Route::get('/filter', [FilterController::class, 'getFilterData']);
+Route::get('/filter', [DataController::class, 'getFilterData']);
+Route::get('/datainput', [DataController::class, 'getInputData']);
+Route::get('/jadwalpagi', [WaktuPerkuliahanController::class, 'jadwalPagi']);
+Route::get('/jadwalmalam', [WaktuPerkuliahanController::class, 'jadwalMalam']);

@@ -22,7 +22,7 @@ class JadwalController extends Controller implements HasMiddleware
      */
     public function index()
     {
-        $jadwal = Jadwal::select('jadwals.hari_jadwal', 'prodis.nama_prodi',
+        $jadwal = Jadwal::select('jadwals.id','jadwals.hari_jadwal', 'prodis.nama_prodi',
         'makuls.nama_makul', 'dosens1.nama_dosen as nama_dosen_1',
         'dosens2.nama_dosen as nama_dosen_2', 'laborans.nama_laboran', 
         'ruangans.kode_ruangan', 'jadwals.kelas', 'jadwals.status',

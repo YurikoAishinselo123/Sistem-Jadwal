@@ -52,6 +52,7 @@ class LaboranController extends Controller implements HasMiddleware
     public function update(Request $request, Laboran $laboran)
     {
         $fields=$request->validate([
+            'kode_laboran' => 'required',
             'nama_laboran' => 'required'        
         ]);//
 
@@ -64,6 +65,13 @@ class LaboranController extends Controller implements HasMiddleware
      */
     public function destroy(Laboran $laboran)
     {
-        $laboran->delete();//
+        if($laboran->jadwal()->exists()){
+            return response("Data laboran tidak bisa dihapus karena terdapat di data jadwal", 422);
+        }else{
+            $laboran->delete();//
+            return[
+                "messsage"=>"Data laboran berhasil dihapus"
+            ];
+        }
     }
 }

@@ -2,18 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginUserRequest;
+use App\Http\Requests\RegisterUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Symfony\Component\HttpFoundation\Response;
 
 class AuthController extends Controller
 {
-    public function register(Request $request){
-        $field = $request->validate([
-            'name' => 'required|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required'
-        ]);
+    public function register(RegisterUserRequest $request){
+        $field = $request->validated();
         $user = User::create($field);
         return [
             'user' =>$user
@@ -21,16 +20,16 @@ class AuthController extends Controller
     }//
     public function login(Request $request){
         $request->validate([
-            'name' => 'required|exists:users',
+            'name' => 'required',
             'password' => 'required'
         ]);
 
         $user = User::where('name', $request->name)->first();
 
-        if (!$user||!Hash::check($request->password, $user->password)){
-            return [
-                'message'=> 'the provided credentials are incorrect'
-            ];
+        if (!$user){
+            return new Response('Username salah silahkan coba lagi', 418);
+        } else if(!Hash::check($request->password, $user->password)){
+            return new Response('Password salah silahkan coba lagi', 418);
         }
         $token = $user->createToken($user->name);
         return [
@@ -41,7 +40,7 @@ class AuthController extends Controller
     public function logout(Request $request){
         $request->user()->tokens()->delete();
         return [
-            'message' => 'you are logged out.'
+            'message' => 'berhasil log out.'
         ];
     }//
 }

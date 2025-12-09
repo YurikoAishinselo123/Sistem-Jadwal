@@ -69,6 +69,14 @@ class DosenController extends Controller implements HasMiddleware
      */
     public function destroy(Dosen $dosen)
     {
-        $dosen->delete();//
+        if($dosen->jadwal1()->exists()|$dosen->jadwal2()->exists()){
+            return response("Data dosen tidak bisa dihapus karena terdapat di data jadwal", 422);
+        }else{
+            $dosen->delete();//
+            return[
+                "messsage"=>"Data dosen berhasil dihapus"
+            ];
+        }
+        
     }
 }

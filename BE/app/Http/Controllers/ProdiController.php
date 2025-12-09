@@ -57,7 +57,7 @@ class ProdiController extends Controller implements HasMiddleware
             'nama_prodi' => 'required'
         ]);//
 
-        $prodi->Prodi::update($fields);
+        $prodi->update($fields);
         return ['prodi' => $prodi];
         //
     }
@@ -67,6 +67,13 @@ class ProdiController extends Controller implements HasMiddleware
      */
     public function destroy(Prodi $prodi)
     {
-        $prodi->delete();//
+        if($prodi->jadwal()->exists()){
+            return response("Data prodi tidak bisa dihapus karena terdapat di data jadwal", 422);
+        }else{
+            $prodi->delete();//
+            return[
+                "messsage"=>"Data prodi berhasil dihapus"
+            ];
+        }
     }
 }

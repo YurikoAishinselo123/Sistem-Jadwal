@@ -12,5 +12,6 @@ class WaktuPerkuliahan extends Model
 
     protected $fillable = [
         'jam',
+        'sesi'
     ];
 }
