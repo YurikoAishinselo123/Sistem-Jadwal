@@ -1,5 +1,5 @@
 export interface IFilterDashboard {
-  periodeTahunAjaran: string
+  periode: string
   hari: string
   programStudi: string
   mataKuliah: string
@@ -22,7 +22,5 @@ export interface IJadwalResponse {
   kelas?: string
   status?: string
   jenis_jadwal?: string
-  nama_periode?: string
-  tahun_periode?: string
-  periodeTahunAjaran?: string
+  periode?: string
 }

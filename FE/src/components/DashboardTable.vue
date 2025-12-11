@@ -114,8 +114,8 @@ const formatMataKuliah = (text: string): string => {
 
     <!-- TABLE -->
     <div class="overflow-auto max-h-[45vh] bg-white">
-      <table class="w-full table-auto">
-        <thead class="bg-header-table sticky top-0 z-10">
+      <table class="w-full table-auto relative">
+        <thead class="bg-header-table sticky top-0">
           <tr>
             <th v-if="hasActions" class="py-3"></th>
 
