@@ -5,10 +5,11 @@
     <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <!-- Periode Tahun Ajaran -->
       <CustomDropdown
-        v-model="filters.periodeTahunAjaran"
-        :options="options.periodeTahunAjaran"
+        v-model="filters.periode"
+        :options="options.periode"
         placeholder="Periode Tahun Ajaran"
         :searchable="false"
+        :clearable="true"
       />
 
       <!-- Hari -->
@@ -17,6 +18,7 @@
         :options="options.hari"
         placeholder="Hari"
         :searchable="true"
+        :clearable="true"
       />
 
       <!-- Program Studi -->
@@ -25,6 +27,7 @@
         :options="options.programStudi"
         placeholder="Program Studi"
         :searchable="true"
+        :clearable="true"
       />
 
       <!-- Mata Kuliah -->
@@ -33,6 +36,7 @@
         :options="options.mataKuliah"
         placeholder="Mata Kuliah"
         :searchable="true"
+        :clearable="true"
       />
 
       <!-- Dosen -->
@@ -41,7 +45,7 @@
         :options="options.jenisJadwal"
         placeholder="Jenis Jadwal"
         :clearable="false"
-        :searchable="true"
+        :searchable="false"
       />
 
       <!-- Laboran -->
@@ -50,6 +54,7 @@
         :options="options.laboran"
         placeholder="Laboran"
         :searchable="true"
+        :clearable="true"
       />
 
       <!-- Waktu Perkuliahan -->
@@ -58,6 +63,7 @@
         :options="options.waktuPerkuliahan"
         placeholder="Waktu Perkuliahan"
         :searchable="true"
+        :clearable="true"
       />
 
       <!-- Reset Button -->
@@ -78,7 +84,7 @@ import CustomDropdown from './CustomDropdown.vue'
 // Props declaration
 const props = defineProps<{
   options: {
-    periodeTahunAjaran: string[]
+    periode: string[]
     hari: string[]
     programStudi: string[]
     mataKuliah: string[]
@@ -90,7 +96,7 @@ const props = defineProps<{
 
 // Define filter type
 interface Filters {
-  periodeTahunAjaran: string
+  periode: string
   hari: string
   programStudi: string
   mataKuliah: string
@@ -107,7 +113,7 @@ const emit = defineEmits<{
 
 // Reactive filter model
 const filters = reactive<Filters>({
-  periodeTahunAjaran: '',
+  periode: '',
   hari: '',
   programStudi: '',
   mataKuliah: '',
@@ -118,7 +124,7 @@ const filters = reactive<Filters>({
 
 // RESET
 const resetFilter = () => {
-  filters.periodeTahunAjaran = ''
+  filters.periode = ''
   filters.hari = ''
   filters.programStudi = ''
   filters.mataKuliah = ''

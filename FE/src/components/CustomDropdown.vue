@@ -43,7 +43,12 @@
       v-else
       @click="toggleDropdown"
       type="button"
-      class="w-full px-4 py-3 bg-white border text-sm border-gray-300 rounded-lg text-left flex items-center justify-between hover:border-gray-400 transition-all focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+      :class="[
+        'w-full px-4 py-3 bg-white border text-sm rounded-lg text-left flex items-center justify-between transition-all focus:outline-none',
+        showError
+          ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+          : 'border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500',
+      ]"
     >
       <span :class="!modelValue || modelValue === placeholder ? 'text-gray-400' : 'text-gray-700'">
         {{ modelValue || placeholder }}
@@ -73,6 +78,14 @@
         type="button"
         class="w-full px-4 py-3 text-left hover:bg-red-50 transition-colors text-red-600 font-medium border-b border-gray-200 flex items-center gap-2"
       >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
         {{ clearText }}
       </button>
 
@@ -101,15 +114,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  options: { type: Array as () => any[], required: true },
-  placeholder: { type: String, default: 'Select...' },
+  options: { type: Array as () => string[], required: true },
+  placeholder: { type: String, default: 'Pilih...' },
   searchable: { type: Boolean, default: false },
   label: { type: String, default: '' },
-  clearable: { type: Boolean, default: true },
+  clearable: { type: Boolean, default: false },
   clearText: { type: String, default: 'Kosongkan pilihan' },
   required: { type: Boolean, default: false },
   showError: { type: Boolean, default: false },
@@ -125,7 +138,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const filteredOptions = computed(() => {
   if (!props.searchable) return props.options
   return props.options.filter((option) =>
-    option.toLowerCase().includes(searchTerm.value.toLowerCase()),
+    String(option).toLowerCase().includes(searchTerm.value.toLowerCase()),
   )
 })
 
@@ -148,7 +161,9 @@ const clearSelection = () => {
 
 const toggleDropdown = () => {
   open.value = !open.value
-  if (open.value && inputRef.value) inputRef.value.focus()
+  if (open.value && inputRef.value) {
+    setTimeout(() => inputRef.value?.focus(), 10)
+  }
 }
 
 const handleClickOutside = (event: MouseEvent) => {
@@ -158,6 +173,41 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 }
 
-onMounted(() => document.addEventListener('mousedown', handleClickOutside))
-onUnmounted(() => document.removeEventListener('mousedown', handleClickOutside))
+// Watch for changes in modelValue to log them (helpful for debugging)
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    console.log(`🔄 ${props.label} changed to:`, newVal)
+  },
+  { immediate: false },
+)
+
+onMounted(() => {
+  document.addEventListener('mousedown', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('mousedown', handleClickOutside)
+})
 </script>
+
+<style scoped>
+/* Custom scrollbar for dropdown */
+.max-h-60::-webkit-scrollbar {
+  width: 8px;
+}
+
+.max-h-60::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.max-h-60::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.max-h-60::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+</style>

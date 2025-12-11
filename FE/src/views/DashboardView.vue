@@ -33,7 +33,7 @@ const showPrintPage = ref(false)
 
 // FILTER STATE
 const activeFilters = ref<IFilterDashboard>({
-  periodeTahunAjaran: '',
+  periode: '',
   hari: '',
   programStudi: '',
   mataKuliah: '',
@@ -73,7 +73,7 @@ const getSesiFromTime = (waktuMulai?: string): string => {
 const filterOptions = computed(() => {
   if (jadwalData.value.length === 0) {
     return {
-      periodeTahunAjaran: periodeList.value,
+      periode: periodeList.value,
       hari: DAYS,
       programStudi: prodiList.value,
       mataKuliah: makulList.value,
@@ -83,14 +83,8 @@ const filterOptions = computed(() => {
     }
   }
 
-  // Extract unique periods from jadwal data
-  const periods = getUniqueValues(
-    jadwalData.value.filter((i) => i.nama_periode),
-    'periodeTahunAjaran',
-  )
-
   return {
-    periodeTahunAjaran: periods.length > 0 ? periods : periodeList.value,
+    periode: periodeList.value,
     hari: DAYS,
     programStudi: prodiList.value,
     mataKuliah: makulList.value,
@@ -156,9 +150,6 @@ const formatJadwalItem = (item: any) => {
   const waktu =
     item.waktu_mulai && item.waktu_selesai ? `${item.waktu_mulai} - ${item.waktu_selesai}` : '-'
 
-  const periodeTahunAjaran =
-    item.nama_periode && item.tahun_periode ? `${item.nama_periode} ${item.tahun_periode}` : ''
-
   // Determine session based on start time
   const sesi = getSesiFromTime(item.waktu_mulai ?? '')
 
@@ -171,8 +162,7 @@ const formatJadwalItem = (item: any) => {
     laboran: item.nama_laboran || '-',
     ruang: ruangKelas,
     waktu,
-    sesi, // Add sesi field for filtering
-    periodeTahunAjaran,
+    sesi,
     jenisJadwal: item.jenis_jadwal || 'Jadwal Semester',
   }
 }
@@ -183,13 +173,12 @@ const filteredData = computed(() => {
   const f = activeFilters.value
 
   return formatted.filter((item) => {
-    if (f.periodeTahunAjaran && item.periodeTahunAjaran !== f.periodeTahunAjaran) return false
+    if (f.periode && item.periode !== f.periode) return false
     if (f.hari && item.hari !== f.hari) return false
     if (f.programStudi && item.programStudi !== f.programStudi) return false
     if (f.mataKuliah && item.mataKuliah !== f.mataKuliah) return false
     if (f.jenisJadwal && item.jenisJadwal !== f.jenisJadwal) return false
     if (f.laboran && item.laboran !== f.laboran) return false
-    // Filter by session (Sesi Pagi/Malam)
     if (f.waktuPerkuliahan && item.sesi !== f.waktuPerkuliahan) return false
     return true
   })
@@ -205,7 +194,7 @@ const handleFilterChange = (filters: IFilterDashboard) => {
 
 const handleReset = () => {
   activeFilters.value = {
-    periodeTahunAjaran: '',
+    periode: '',
     hari: '',
     programStudi: '',
     mataKuliah: '',
@@ -215,9 +204,11 @@ const handleReset = () => {
   }
 }
 
-const handleEdit = (row: any) => {
-  console.log('Edit row:', row)
-  alert(`Edit jadwal: ${row.mataKuliah}`)
+const handleEdit = (row: any & { id: number }) => {
+  router.push({
+    name: 'EditJadwal',
+    params: { id: row.id },
+  })
 }
 
 const handleDelete = async (row: any) => {
@@ -234,14 +225,17 @@ const handleDelete = async (row: any) => {
   }
 }
 
-const handleDetail = (row: any & { index: number }) => {
-  console.log('Detail clicked for index:', row.index)
+const handleDetail = (row: any) => {
+  const id = row.id
+
+  if (!id) {
+    console.error('Invalid row: missing ID')
+    return
+  }
 
   router.push({
     name: 'DetailJadwal',
-    params: {
-      id: row.index,
-    },
+    params: { id },
   })
 }
 

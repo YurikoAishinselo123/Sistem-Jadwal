@@ -8,55 +8,70 @@ import { useToast } from '@/composables/UseToast'
 
 const { success, error } = useToast()
 
+interface IPeriodeForm {
+  namaPeriode: string
+  tahun: number
+  tanggalMulai: string
+}
+
 const periodeList = ref<IPeriode[]>([])
 
-// Load Periode data
 async function loadPeriode() {
   try {
     const response = await MasterDataAPI.getAll('periode')
+    const rawData = response.data
 
-    periodeList.value = response.data.map((p: any) => {
-      const [namaPeriode, tahun] = p.periode.split(' ')
+    if (!rawData || !Array.isArray(rawData)) {
+      periodeList.value = []
+      return
+    }
 
-      return {
-        id: p.id,
-        namaPeriode,
-        tahun: Number(tahun),
-        status: p.status,
-        tanggalMulai: p.tanggal_mulai,
-        tanggalSelesai: p.tanggal_selesai,
-      }
-    }) as IPeriode[]
+    periodeList.value = rawData.map(
+      (item: any): IPeriode => ({
+        id: item.id ?? null,
+        periode: item.periode ?? '',
+        status: item.status ?? '',
+        tanggalMulai: item.tanggal_mulai ?? '',
+        tanggalSelesai: item.tanggal_selesai ?? null,
+      }),
+    )
   } catch (err) {
     error('Gagal memuat data periode')
   }
 }
 
-// Computed table data
 const tableData = computed(() =>
-  [...periodeList.value].map((p) => ({
+  periodeList.value.map((p) => ({
     ...p,
-    periodeDisplay: `${p.namaPeriode} ${p.tahun}`,
-    tanggalSelesaiDisplay: p.tanggalSelesai ?? '–',
+    periodeDisplay: p.periode,
+    tanggalMulaiDisplay: formatDateDMY(p.tanggalMulai) ?? '–',
+    tanggalSelesaiDisplay: formatDateDMY(p.tanggalSelesai) ?? '–',
   })),
 )
 
-// Modal State
+// ----------------------
+// MODAL STATE
+// ----------------------
 const showModal = ref(false)
 const modalTitle = ref('')
 const modalSubmitText = ref('')
+
 const modalFields = ref<
   { name: string; label: string; placeholder: string; type: string; options?: string[] }[]
 >([])
 
-// Form data object
-const modalData = ref<{ namaPeriode: string; tahun: number; tanggalMulai: string }>({
+// ----------------------
+// FORM MODEL (FIX)
+// ----------------------
+const modalData = ref<IPeriodeForm>({
   namaPeriode: '',
   tahun: new Date().getFullYear(),
   tanggalMulai: '',
 })
 
-// Open Add Modal
+// ----------------------
+// OPEN ADD MODAL
+// ----------------------
 function handleAdd() {
   modalTitle.value = 'Tambah Periode Baru'
   modalSubmitText.value = 'Tambah'
@@ -65,11 +80,16 @@ function handleAdd() {
     {
       name: 'namaPeriode',
       label: 'Nama Periode',
-      placeholder: 'Masukkan nama periode',
-      type: 'select',
+      placeholder: 'Pilih jenis periode',
+      type: 'dropdown',
       options: ['Ganjil', 'Genap', 'Ganjil Pendek', 'Genap Pendek'],
     },
-    { name: 'tahun', label: 'Tahun', placeholder: 'Masukkan tahun', type: 'number' },
+    {
+      name: 'tahun',
+      label: 'Tahun',
+      placeholder: 'Masukkan tahun',
+      type: 'number',
+    },
     {
       name: 'tanggalMulai',
       label: 'Tanggal Mulai',
@@ -87,12 +107,10 @@ function handleAdd() {
   showModal.value = true
 }
 
-// Handle form submit
-async function handleSubmitPeriode(data: {
-  namaPeriode: string
-  tahun: number
-  tanggalMulai: string
-}) {
+// ----------------------
+// SUBMIT PERIODE
+// ----------------------
+async function handleSubmitPeriode(data: IPeriodeForm) {
   if (!data.namaPeriode || !data.tahun || !data.tanggalMulai) return
 
   const newPeriode = {
@@ -112,34 +130,40 @@ async function handleSubmitPeriode(data: {
   }
 }
 
-// Finish Periode
+// ----------------------
+// FINISH PERIODE
+// ----------------------
 async function finishPeriode(item: IPeriode) {
-  const updated = {
-    periode: `${item.namaPeriode} ${item.tahun}`,
+  const payload = {
+    periode: item.periode,
     status: 'Selesai',
     tanggal_mulai: item.tanggalMulai,
     tanggal_selesai: new Date().toISOString().slice(0, 10),
   }
 
   try {
-    await MasterDataAPI.update('periode', item.id!, updated)
+    await MasterDataAPI.update('periode', item.id!, payload)
     await loadPeriode()
     success('Periode berhasil ditandai selesai!')
   } catch (err) {
     console.warn('API update failed, updating locally', err)
-    Object.assign(item, updated)
+    Object.assign(item, payload)
   }
 }
 
 function confirmFinish(row: any) {
-  const original = periodeList.value.find(
-    (p) => `${p.namaPeriode} ${p.tahun}` === row.periodeDisplay,
-  )
+  const original = periodeList.value.find((p) => p.periode === row.periodeDisplay)
   if (!original) return
 
-  if (confirm(`Yakin ingin menyelesaikan periode ${original.namaPeriode} ${original.tahun}?`)) {
+  if (confirm(`Yakin ingin menyelesaikan periode ${original.periode}?`)) {
     finishPeriode(original)
   }
+}
+
+function formatDateDMY(dateStr: string | null): string {
+  if (!dateStr) return '–'
+  const [y, m, d] = dateStr.split('-')
+  return `${d}-${m}-${y}`
 }
 
 onMounted(loadPeriode)
@@ -148,7 +172,7 @@ onMounted(loadPeriode)
 <template>
   <MasterDataTable
     :columns="['Periode', 'Status', 'Tanggal Mulai', 'Tanggal Selesai']"
-    :dataKeys="['periodeDisplay', 'status', 'tanggalMulai', 'tanggalSelesaiDisplay']"
+    :dataKeys="['periodeDisplay', 'status', 'tanggalMulaiDisplay', 'tanggalSelesaiDisplay']"
     :items="tableData"
     :searchKeys="['periodeDisplay']"
     searchPlaceholder="Cari periode..."

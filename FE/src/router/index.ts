@@ -11,6 +11,7 @@ import MasterDataLaboran from '@/views/masterData/MasterDataLaboran.vue'
 import MasterDataRuangKelas from '@/views/masterData/MasterDataRuangKelas.vue'
 import MasterDataWaktuPerkuliahan from '@/views/masterData/MasterDataWaktuPerkuliahan.vue'
 import DashboardViewDetail from '@/views/dashboard/DashboardViewDetail.vue'
+import JadwalForm from '@/views/dashboard/JadwalForm.vue'
 import MasterDataPeriode from '@/views/masterData/MasterDataPeriode.vue'
 import LoginPage from '@/views/authentication/LoginPage.vue'
 import SignupPage from '@/views/authentication/SignupPage.vue'
@@ -49,9 +50,19 @@ const routes = [
         component: DashboardViewDetail,
       },
       {
-        path: 'tambah-jadwal',
+        path: '/jadwal/tambah',
         name: 'tambahJadwal',
         component: TambahJadwalView,
+        props: { mode: 'add' },
+      },
+      {
+        path: '/jadwal/edit/:id',
+        name: 'EditJadwal',
+        component: JadwalForm,
+        props: (route: RouteLocationNormalized) => ({
+          mode: 'edit',
+          id: Number(route.params.id),
+        }),
       },
       {
         path: 'beban-kerja-dosen',
