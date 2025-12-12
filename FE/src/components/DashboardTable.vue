@@ -35,8 +35,30 @@ const emit = defineEmits<{
 const activeMenu = ref<number | null>(null)
 
 /* ---------- FUNCTIONS ---------- */
-const toggleMenu = (rowIndex: number) => {
-  activeMenu.value = activeMenu.value === rowIndex ? null : rowIndex
+// const toggleMenu = (rowIndex: number) => {
+//   activeMenu.value = activeMenu.value === rowIndex ? null : rowIndex
+// }
+const menuStyles = ref({ top: '0px', left: '0px' })
+
+const toggleMenu = (rowIndex: number, event?: MouseEvent) => {
+  if (activeMenu.value === rowIndex) {
+    activeMenu.value = null
+    return
+  }
+
+  activeMenu.value = rowIndex
+
+  const btn = (event?.target as HTMLElement).closest('.action-button') as HTMLElement
+
+  if (btn) {
+    const rect = btn.getBoundingClientRect()
+    const popupHeight = 120 // Approximate popup height in px (adjust as needed)
+
+    menuStyles.value = {
+      top: `${rect.top + window.scrollY + rect.height / 2 - popupHeight / 2}px`,
+      left: `${rect.right + 10 + window.scrollX}px`,
+    }
+  }
 }
 
 const handleEdit = (row: Row) => {
@@ -135,7 +157,7 @@ const formatMataKuliah = (text: string): string => {
             <!-- Actions -->
             <td v-if="hasActions" class="py-2 px-1 text-center relative">
               <button
-                @click="toggleMenu(rowIndex)"
+                @click="(e) => toggleMenu(rowIndex, e)"
                 class="p-2 hover:bg-gray-100 rounded-full action-button"
               >
                 <svg class="w-5 h-5 text-gray-600" viewBox="0 0 16 16">
@@ -146,31 +168,34 @@ const formatMataKuliah = (text: string): string => {
               </button>
 
               <!-- Popup -->
-              <div
-                v-if="activeMenu === rowIndex"
-                class="absolute top-1/2 -translate-y-1/2 left-full bg-white rounded-xl shadow-xl border z-50 action-menu"
-              >
-                <button
-                  @click="handleDetail(row, rowIndex)"
-                  class="w-full px-4 py-2 flex gap-2 hover:bg-gray-100 text-sm"
+              <Teleport to="body">
+                <div
+                  v-if="activeMenu === rowIndex"
+                  class="fixed bg-white rounded-xl shadow-xl border z-50 action-menu"
+                  :style="menuStyles"
                 >
-                  <Detail_icon class="w-5 h-5" /> Detail
-                </button>
+                  <button
+                    @click="handleDetail(row, rowIndex)"
+                    class="w-full px-4 py-2 flex gap-2 hover:bg-gray-100 text-sm text-black"
+                  >
+                    <Detail_icon class="w-5 h-5" /> Detail
+                  </button>
 
-                <button
-                  @click="handleEdit(row)"
-                  class="w-full px-4 py-2 flex gap-2 hover:bg-gray-100 text-sm"
-                >
-                  <Edit_icon class="w-5 h-5" /> Edit
-                </button>
+                  <button
+                    @click="handleEdit(row)"
+                    class="w-full px-4 py-2 flex gap-2 hover:bg-gray-100 text-sm text-black"
+                  >
+                    <Edit_icon class="w-5 h-5" /> Edit
+                  </button>
 
-                <button
-                  @click="handleDelete(row)"
-                  class="w-full px-4 py-2 flex gap-2 hover:bg-red-50 text-sm text-red-600"
-                >
-                  <Delete_icon class="w-5 h-5" /> Delete
-                </button>
-              </div>
+                  <button
+                    @click="handleDelete(row)"
+                    class="w-full px-4 py-2 flex gap-2 hover:bg-red-50 text-sm text-red-600"
+                  >
+                    <Delete_icon class="w-5 h-5" /> Delete
+                  </button>
+                </div>
+              </Teleport>
             </td>
 
             <!-- DATA -->
