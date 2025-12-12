@@ -36,19 +36,9 @@ interface Laboran {
   nama_laboran: string
 }
 
-interface RuanganPraktek {
+interface Ruangan {
   id: number
-  nama_ruangan_praktek: string
-}
-
-interface RuanganTeori {
-  id: number
-  nama_ruangan_teori: string
-}
-
-interface WaktuKuliah {
-  id: number
-  waktu: string
+  nama_ruangan: string
 }
 
 interface ApiData {
@@ -57,9 +47,9 @@ interface ApiData {
   makul: Makul[]
   dosen: Dosen[]
   laboran: Laboran[]
-  ruanganPraktek: RuanganPraktek[]
-  ruanganTeori: RuanganTeori[]
-  waktu: WaktuKuliah[]
+  ruangan: Ruangan[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  waktu: any[]
 }
 
 // API data storage
@@ -69,8 +59,7 @@ const apiData = ref<ApiData>({
   makul: [],
   dosen: [],
   laboran: [],
-  ruanganPraktek: [],
-  ruanganTeori: [],
+  ruangan: [],
   waktu: [],
 })
 
@@ -98,7 +87,7 @@ const timeSlots = {
 const allTimeSlots = [...timeSlots.pagi, ...timeSlots.malam]
 const isOnline = computed(() => formData.status === 'Online')
 
-// Form data - stores display values with separate variables
+// Form data - stores display values
 const formData = reactive({
   periodeTahunAjaran: '',
   hari: '',
@@ -111,16 +100,9 @@ const formData = reactive({
   kelas: '',
   dosen1: '',
   dosen2: '',
-  dosen3: '',
-  laboran1: '',
-  laboran2: '',
-  ruanganKelasPraktek: '',
-  ruangKelasTeori: '',
+  laboran: '',
+  ruangKelas: '',
 })
-
-// Track if optional fields are visible
-const showDosen3 = ref(false)
-const showLaboran2 = ref(false)
 
 // Store selected IDs for API payload
 const selectedIds = reactive<{
@@ -129,22 +111,16 @@ const selectedIds = reactive<{
   makulId: number | null
   dosen1Id: number | null
   dosen2Id: number | null
-  dosen3Id: number | null
-  laboran1Id: number | null
-  laboran2Id: number | null
-  ruanganPraktekId: number | null
-  ruanganTeoriId: number | null
+  laboranId: number | null
+  ruanganId: number | null
 }>({
   periodeId: null,
   prodiId: null,
   makulId: null,
   dosen1Id: null,
   dosen2Id: null,
-  dosen3Id: null,
-  laboran1Id: null,
-  laboran2Id: null,
-  ruanganPraktekId: null,
-  ruanganTeoriId: null,
+  laboranId: null,
+  ruanganId: null,
 })
 
 // Error state
@@ -159,9 +135,8 @@ const showError = reactive({
   kelas: false,
   dosen1: false,
   dosen2: false,
-  laboran1: false,
-  ruanganKelasPraktek: false,
-  ruanganKelasTeori: false,
+  laboran: false,
+  ruangKelas: false,
 })
 
 // Fetch form data from API
@@ -267,36 +242,18 @@ watch([() => formData.waktuMulai, () => formData.mataKuliah], () => {
 // Available start times
 const availableStartTimes = computed(() => allTimeSlots)
 
-// Filter dosen options - exclude already selected dosens
+// Filter dosen options for Dosen 1 (exclude dosen2)
 const dosen1Options = computed(() => {
   return apiData.value.dosen
     .map((item) => item.nama_dosen)
-    .filter((name) => name !== formData.dosen2 && name !== formData.dosen3)
+    .filter((name) => name !== formData.dosen2)
 })
 
+// Filter dosen options for Dosen 2 (exclude dosen1)
 const dosen2Options = computed(() => {
   return apiData.value.dosen
     .map((item) => item.nama_dosen)
-    .filter((name) => name !== formData.dosen1 && name !== formData.dosen3)
-})
-
-const dosen3Options = computed(() => {
-  return apiData.value.dosen
-    .map((item) => item.nama_dosen)
-    .filter((name) => name !== formData.dosen1 && name !== formData.dosen2)
-})
-
-// Filter laboran options - exclude already selected laborans
-const laboran1Options = computed(() => {
-  return apiData.value.laboran
-    .map((item) => item.nama_laboran)
-    .filter((name) => name !== formData.laboran2)
-})
-
-const laboran2Options = computed(() => {
-  return apiData.value.laboran
-    .map((item) => item.nama_laboran)
-    .filter((name) => name !== formData.laboran1)
+    .filter((name) => name !== formData.dosen1)
 })
 
 // Dropdown options from API
@@ -310,11 +267,8 @@ const dropdownOptions = computed(() => ({
   kelas: ['A', 'B', 'C', 'D', 'E'],
   dosen1: dosen1Options.value,
   dosen2: dosen2Options.value,
-  dosen3: dosen3Options.value,
-  laboran1: laboran1Options.value,
-  laboran2: laboran2Options.value,
-  // ruangKelasPraktek: apiData.value.ruanganPraktek.map((item) => item.nama_ruangan_praktek),
-  // ruangKelasTeori: apiData.value.ruanganTeori.map((item) => item.nama_ruangan_teori),
+  laboran: apiData.value.laboran.map((item) => item.nama_laboran),
+  ruangKelas: apiData.value.ruangan.map((item) => item.nama_ruangan),
 }))
 
 // Helper function to get ID from selected value
@@ -326,6 +280,11 @@ const getIdFromValue = <T extends { id: number }>(
   const item = array.find((item) => String(item[nameKey]) === value)
   return item?.id ?? null
 }
+
+// Convert status string to number for API
+// const getStatusValue = (status: string): number => {
+//   return status === 'Online' ? 1 : 2
+// }
 
 // Watch for changes and update IDs
 watch(
@@ -364,45 +323,16 @@ watch(
 )
 
 watch(
-  () => formData.dosen3,
+  () => formData.laboran,
   (newValue) => {
-    selectedIds.dosen3Id = getIdFromValue(apiData.value.dosen, newValue, 'nama_dosen')
+    selectedIds.laboranId = getIdFromValue(apiData.value.laboran, newValue, 'nama_laboran')
   },
 )
 
 watch(
-  () => formData.laboran1,
+  () => formData.ruangKelas,
   (newValue) => {
-    selectedIds.laboran1Id = getIdFromValue(apiData.value.laboran, newValue, 'nama_laboran')
-  },
-)
-
-watch(
-  () => formData.laboran2,
-  (newValue) => {
-    selectedIds.laboran2Id = getIdFromValue(apiData.value.laboran, newValue, 'nama_laboran')
-  },
-)
-
-watch(
-  () => formData.ruanganKelasPraktek,
-  (newValue) => {
-    selectedIds.ruanganPraktekId = getIdFromValue(
-      apiData.value.ruanganPraktek,
-      newValue,
-      'nama_ruangan_praktek',
-    )
-  },
-)
-
-watch(
-  () => formData.ruangKelasTeori,
-  (newValue) => {
-    selectedIds.ruanganTeoriId = getIdFromValue(
-      apiData.value.ruanganTeori,
-      newValue,
-      'nama_ruangan_teori',
-    )
+    selectedIds.ruanganId = getIdFromValue(apiData.value.ruangan, newValue, 'nama_ruangan')
   },
 )
 
@@ -410,36 +340,29 @@ watch(
   () => formData.status,
   (newValue) => {
     if (newValue === 'Online') {
-      formData.ruangKelasTeori = ''
-      formData.ruanganKelasPraktek = ''
-      selectedIds.ruanganPraktekId = null
-      selectedIds.ruanganTeoriId = null
-      showError.ruanganKelasPraktek = false
-      showError.ruanganKelasTeori = false
+      formData.ruangKelas = ''
+      selectedIds.ruanganId = null
+      showError.ruangKelas = false
     }
   },
 )
 
-// Methods to add/remove dosen
-const addDosen = () => {
-  showDosen3.value = true
+function addDosen() {
+  // if (formData.value.laboran.length < 2) {
+  //   formData.value.laboran.push(null)
+  // }
 }
 
-const removeDosen = () => {
-  showDosen3.value = false
-  formData.dosen3 = ''
-  selectedIds.dosen3Id = null
+function addLaboran() {}
+
+function removeLaboran(index: number) {
+  console.log('Remove dosen index:', index)
+  return 10
 }
 
-// Methods to add/remove laboran
-const addLaboran = () => {
-  showLaboran2.value = true
-}
-
-const removeLaboran = () => {
-  showLaboran2.value = false
-  formData.laboran2 = ''
-  selectedIds.laboran2Id = null
+function removeDosen(index: number) {
+  console.log('Remove dosen index:', index)
+  return 10
 }
 
 // Form submission
@@ -447,14 +370,11 @@ const handleSubmit = async () => {
   // Reset errors
   Object.keys(showError).forEach((key) => (showError[key as keyof typeof showError] = false))
 
-  // Validate required fields (excluding optional dosen3 and laboran2)
+  // Validate required fields
   const requiredFields = Object.keys(showError).filter((key) => {
-    if ((key === 'ruanganKelasPraktek' || key === 'ruanganKelasTeori') && isOnline.value) {
-      return false
-    }
+    if (key === 'ruangKelas' && isOnline.value) return false
     return true
   })
-
   const missingFields = requiredFields.filter((key) => !formData[key as keyof typeof formData])
 
   if (missingFields.length > 0) {
@@ -478,7 +398,7 @@ const handleSubmit = async () => {
     return
   }
 
-  // Prepare payload with IDs (dosen3 and laboran2 are optional)
+  // Prepare payload with IDs
   const payload = {
     periode_tahun_id: selectedIds.periodeId,
     hari_jadwal: formData.hari,
@@ -491,11 +411,8 @@ const handleSubmit = async () => {
     kelas: formData.kelas,
     dosen_1: selectedIds.dosen1Id,
     dosen_2: selectedIds.dosen2Id,
-    ...(selectedIds.dosen3Id && { dosen_3: selectedIds.dosen3Id }), // Optional
-    laboran_1: selectedIds.laboran1Id,
-    ...(selectedIds.laboran2Id && { laboran_2: selectedIds.laboran2Id }), // Optional
-    ...(isOnline.value ? {} : { ruangan_praktek_id: selectedIds.ruanganPraktekId }),
-    ...(isOnline.value ? {} : { ruangan_teori_id: selectedIds.ruanganTeoriId }),
+    laboran_id: selectedIds.laboranId,
+    ...(isOnline.value ? {} : { ruangan_id: selectedIds.ruanganId }),
   }
 
   try {
@@ -508,8 +425,9 @@ const handleSubmit = async () => {
     }
 
     router.push({ name: 'dashboard' })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    const message = err?.response?.data.message || 'Gagal menambahkan jadwal'
+    const message = err?.response?.data.message || 'Gagal menghapus data dosen'
     error(message)
   }
 }
@@ -533,7 +451,7 @@ Object.keys(formData).forEach((key) => {
 </script>
 
 <template>
-  <div class="mb-8 mt-10 sm:mt-14 xl:mt-0">
+  <div class="mb-8 mt-12 sm:mt-10 xl:mt-0">
     <h1 class="text-xl sm:text-3xl font-bold text-black">Tambah Jadwal</h1>
     <p class="text-sm sm:text-lg text-black">
       Isi form di bawah untuk menambahkan jadwal perkuliahan
@@ -553,11 +471,13 @@ Object.keys(formData).forEach((key) => {
   </div>
 
   <!-- Form -->
-  <div v-else class="bg-white rounded-xl shadow-lg p-8 h-[78vh] overflow-y-auto">
+  <div v-else class="bg-white rounded-xl shadow-lg p-8">
     <form @submit.prevent="handleSubmit" class="space-y-10">
-      <!-- Info Akademik -->
+      <!-- ========================= -->
+      <!--  TAB / GROUP 1 — AKADEMIK -->
+      <!-- ========================= -->
       <div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Info Akademik</h2>
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Akademik</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Periode Tahun Ajaran -->
@@ -620,7 +540,9 @@ Object.keys(formData).forEach((key) => {
         </div>
       </div>
 
-      <!-- WAKTU & LOKASI -->
+      <!-- =============================== -->
+      <!--  TAB / GROUP 2 — WAKTU & LOKASI -->
+      <!-- =============================== -->
       <div>
         <h2 class="text-lg font-semibold text-gray-800 mb-4">Waktu & Lokasi</h2>
 
@@ -633,18 +555,6 @@ Object.keys(formData).forEach((key) => {
             placeholder="Pilih hari"
             :required="true"
             :showError="showError.hari"
-          />
-
-          <!-- Status -->
-          <CustomDropdown
-            v-model="formData.status"
-            :options="dropdownOptions.status"
-            placeholder="Pilih Status"
-            label="Status"
-            :searchable="true"
-            :clearable="false"
-            :required="true"
-            :showError="showError.status"
           />
 
           <!-- Waktu Mulai -->
@@ -691,140 +601,137 @@ Object.keys(formData).forEach((key) => {
             </p>
           </div>
 
-          <!-- Ruang Kelas Teori-->
+          <!-- Status -->
           <CustomDropdown
-            v-if="!isOnline"
-            v-model="formData.ruangKelasTeori"
-            :options="dropdownOptions.ruangKelasTeori"
-            placeholder="Pilih ruang kelas teori"
-            label="Ruang Kelas Teori"
+            v-model="formData.status"
+            :options="dropdownOptions.status"
+            placeholder="Pilih Status"
+            label="Status"
             :searchable="true"
-            :clearable="true"
-            :required="!isOnline"
-            :showError="showError.ruanganKelasTeori"
+            :clearable="false"
+            :required="true"
+            :showError="showError.status"
           />
 
-          <!-- Ruang Kelas Praktik -->
+          <!-- Ruang Kelas -->
           <CustomDropdown
             v-if="!isOnline"
-            v-model="formData.ruanganKelasPraktek"
-            :options="dropdownOptions.ruangKelasPraktek"
-            placeholder="Pilih ruang kelas praktikum"
-            label="Ruang Kelas Praktik"
+            v-model="formData.ruangKelas"
+            :options="dropdownOptions.ruangKelas"
+            placeholder="Pilih ruang kelas"
+            label="Ruang Kelas"
             :searchable="true"
             :clearable="true"
             :required="!isOnline"
-            :showError="showError.ruanganKelasPraktek"
+            :showError="showError.ruangKelas"
           />
         </div>
       </div>
 
-      <!-- Pengajar -->
-      <div>
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Pengajar</h2>
+      <!-- ======================= -->
+      <!-- DYNAMIC LABORAN SECTION -->
+      <!-- ======================= -->
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Dosen 1 -->
-          <CustomDropdown
-            v-model="formData.dosen1"
-            :options="dropdownOptions.dosen1"
-            label="Dosen 1"
-            placeholder="Pilih dosen 1"
-            :searchable="true"
-            :clearable="true"
-            :required="true"
-            :showError="showError.dosen1"
-          />
+      <!-- Pengajar Tab -->
+      <div class="space-y-6">
+        <!-- Dosen Section -->
+        <div>
+          <h3 class="font-semibold mb-2">Dosen</h3>
 
-          <!-- Dosen 2 -->
-          <CustomDropdown
-            v-model="formData.dosen2"
-            :options="dropdownOptions.dosen2"
-            label="Dosen 2"
-            placeholder="Pilih dosen 2"
-            :searchable="true"
-            :clearable="true"
-            :required="true"
-            :showError="showError.dosen2"
-          />
-        </div>
-
-        <!-- Optional Dosen 3 with Remove Button -->
-        <div v-if="showDosen3" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="relative">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Dosen 1 -->
             <CustomDropdown
-              v-model="formData.dosen3"
-              :options="dropdownOptions.dosen3"
+              v-model="formData.dosen1[0]"
+              :options="dropdownOptions.dosen1"
+              label="Dosen 1"
+              placeholder="Pilih dosen 1"
+              :searchable="true"
+              :clearable="true"
+              :required="true"
+            />
+
+            <!-- Dosen 2 -->
+            <CustomDropdown
+              v-model="formData.dosen1[1]"
+              :options="dropdownOptions.dosen1"
+              label="Dosen 2"
+              placeholder="Pilih dosen 2"
+              :searchable="true"
+              :clearable="true"
+              :required="true"
+            />
+          </div>
+
+          <!-- Optional Dosen 3 -->
+          <div v-if="formData.dosen1.length > 2" class="mt-4">
+            <CustomDropdown
+              v-model="formData.dosen1[2]"
+              :options="dropdownOptions.dosen1"
               label="Dosen 3 (opsional)"
               placeholder="Pilih dosen 3"
               :searchable="true"
               :clearable="true"
             />
-            <button
-              @click="removeDosen"
-              type="button"
-              class="absolute top-0 right-0 text-red-600 text-sm hover:text-red-800 hover:underline"
-            >
-              ✕ Hapus
-            </button>
           </div>
+
+          <button class="absolute -right-3 -top-3 text-red-600 bg-red-500 rounded-full p-1 shadow">
+            ✕
+          </button>
+
+          <!-- Add Dosen Button -->
+          <button
+            v-if="formData.dosen1.length < 3"
+            @click="addDosen"
+            class="mt-3 text-blue-600 text-sm underline"
+          >
+            + Tambah Dosen
+          </button>
         </div>
 
-        <!-- Add Dosen Button -->
-        <button
-          v-if="!showDosen3"
-          @click="addDosen"
-          type="button"
-          class="mt-3 text-blue-600 text-sm underline hover:text-blue-800 mb-6"
-        >
-          + Tambah Dosen
-        </button>
+        <!-- Laboran Section -->
+        <div>
+          <h3 class="font-semibold mb-2">Laboran</h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          <!-- Laboran 1 -->
-          <CustomDropdown
-            v-model="formData.laboran1"
-            :options="dropdownOptions.laboran1"
-            label="Laboran 1"
-            placeholder="Pilih laboran 1"
-            :searchable="true"
-            :clearable="true"
-            :required="true"
-            :showError="showError.laboran1"
-          />
-
-          <!-- Laboran 2 (Optional) with Remove Button -->
-          <div v-if="showLaboran2" class="relative">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Laboran 1 -->
             <CustomDropdown
-              v-model="formData.laboran2"
-              :options="dropdownOptions.laboran2"
+              v-model="formData.laboran[0]"
+              :options="dropdownOptions.laboran"
+              label="Laboran 1"
+              placeholder="Pilih laboran 1"
+              :searchable="true"
+              :clearable="true"
+              :required="true"
+            />
+
+            <!-- Laboran 2 (Optional) -->
+            <CustomDropdown
+              v-if="formData.laboran.length > 1"
+              v-model="formData.laboran[1]"
+              :options="dropdownOptions.laboran"
               label="Laboran 2 (opsional)"
               placeholder="Pilih laboran 2"
               :searchable="true"
               :clearable="true"
             />
-            <button
-              @click="removeLaboran"
-              type="button"
-              class="absolute top-0 right-0 text-red-600 text-sm hover:text-red-800 hover:underline"
-            >
-              ✕ Hapus
-            </button>
-          </div>
-        </div>
 
-        <!-- Add Laboran Button -->
-        <button
-          v-if="!showLaboran2"
-          @click="addLaboran"
-          type="button"
-          class="mt-3 text-blue-600 text-sm underline hover:text-blue-800"
-        >
-          + Tambah Laboran
-        </button>
+            <button class="text-red-600 bg-white rounded-full p-1 shadow">✕</button>
+          </div>
+
+          <!-- Add Laboran Button -->
+          <button
+            v-if="formData.laboran.length < 2"
+            @click="addLaboran"
+            class="mt-3 text-blue-600 text-sm underline"
+          >
+            + Tambah Laboran
+          </button>
+        </div>
       </div>
 
-      <!-- Action Button -->
+      <!-- =============================== -->
+      <!--  ACTION BUTTONS                 -->
+      <!-- =============================== -->
       <div class="flex justify-end gap-4 mt-4">
         <button
           @click="handleCancel"

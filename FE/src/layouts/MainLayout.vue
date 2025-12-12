@@ -2,7 +2,7 @@
   <div class="flex flex-row min-w-screen">
     <!-- Sidebar (hidden when printing) -->
     <aside class="shadow-lg min-h-screen no-print">
-      <Sidebar />
+      <CustomSidebar />
     </aside>
 
     <!-- Main Content -->
@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import Sidebar from '@/components/Sidebar.vue'
+import CustomSidebar from '@/components/CustomSidebar.vue'
 import ToastNotification from '@/components/ToastNotification.vue'
 import { useToast } from '@/composables/UseToast'
 

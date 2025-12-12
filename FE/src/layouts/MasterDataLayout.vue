@@ -2,7 +2,7 @@
   <div class="flex h-screen overflow-hidden">
     <!-- Sidebar -->
     <aside class="shadow-lg">
-      <Sidebar />
+      <CustomSidebar />
     </aside>
 
     <!-- Main Content -->
@@ -48,9 +48,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import Sidebar from '@/components/Sidebar.vue'
+import CustomSidebar from '@/components/CustomSidebar.vue'
 import ToastNotification from '@/components/ToastNotification.vue'
 import { useToast } from '@/composables/UseToast'
 

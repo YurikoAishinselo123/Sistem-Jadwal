@@ -9,7 +9,8 @@ import MasterDataDosen from '@/views/masterData/MasterDataDosen.vue'
 import MasterDataMakul from '@/views/masterData/MasterDataMakul.vue'
 import MasterDataLaboran from '@/views/masterData/MasterDataLaboran.vue'
 import MasterDataRuangKelas from '@/views/masterData/MasterDataRuangKelas.vue'
-import MasterDataWaktuPerkuliahan from '@/views/masterData/MasterDataWaktuPerkuliahan.vue'
+import tes from '@/views/tesView.vue'
+// import MasterDataWaktuPerkuliahan from '@/views/masterData/MasterDataWaktuPerkuliahan.vue'
 import DashboardViewDetail from '@/views/dashboard/DashboardViewDetail.vue'
 import JadwalForm from '@/views/dashboard/JadwalForm.vue'
 import MasterDataPeriode from '@/views/masterData/MasterDataPeriode.vue'
@@ -54,6 +55,16 @@ const routes = [
         name: 'tambahJadwal',
         component: TambahJadwalView,
         props: { mode: 'add' },
+      },
+      {
+        path: '/tes',
+        name: 'tes',
+        component: tes,
+      },
+      {
+        path: '/jadwal',
+        name: 'jadwal',
+        component: JadwalForm,
       },
       {
         path: '/jadwal/edit/:id',

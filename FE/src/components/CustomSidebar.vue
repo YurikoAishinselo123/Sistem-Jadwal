@@ -54,7 +54,7 @@ const handleLogout = async () => {
     isOpen.value = false
 
     router.push({ name: 'login' })
-  } catch (error) {
+  } catch (err) {
     localStorage.removeItem('token')
     localStorage.removeItem('isAuthenticated')
     router.push({ name: 'login' })
