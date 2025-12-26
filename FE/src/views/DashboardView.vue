@@ -1,13 +1,16 @@
 <script lang="ts" setup>
 import { ref, computed, onMounted } from 'vue'
 import FilterJadwal from '@/components/FilterJadwal.vue'
-import DashboardTable from '@/components/DashboardTable.vue'
 import CustomPrintPage from '@/components/CustomPrintPage.vue'
+import ConfirmationDialog from '@/components/ConfirmationDialog.vue'
 import type { IFilterDashboard, IJadwalResponse } from '@/interfaces/IFilterDashboard'
 import { dashboardAPI } from '@/services/dashboardAPI'
 import { useRouter } from 'vue-router'
+import CustomTable from '@/components/CustomTable.vue'
+import { useToast } from '@/composables/UseToast'
 
 const router = useRouter()
+const { success, error } = useToast()
 
 // TABLE COLUMNS
 const columns = ref([
@@ -42,6 +45,17 @@ const activeFilters = ref<IFilterDashboard>({
   waktuPerkuliahan: '',
 })
 
+// CONFIRMATION DIALOG STATE
+const dialogOpen = ref(false)
+const dialogTitle = ref('')
+const dialogSubtitle = ref('')
+const dialogAction = ref('')
+const pendingAction = ref<{
+  type: 'delete' | 'deleteSelected'
+  data?: any
+  selectedIds?: number[]
+} | null>(null)
+
 // STATIC OPTIONS
 const DAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']
 const JENIS_JADWAL = ['Jadwal Semester', 'Jadwal Pengganti', 'Jadwal Ujian']
@@ -52,11 +66,6 @@ const extractArrayData = (response: any): any[] => {
   if (Array.isArray(response)) return response
   if (Array.isArray(response?.data)) return response.data
   return []
-}
-
-// Helper function to create unique set from array
-const getUniqueValues = (arr: any[], key: string): string[] => {
-  return [...new Set(arr.map((item) => item[key]).filter(Boolean))]
 }
 
 // Helper function to determine session (Pagi/Malam) based on start time
@@ -206,23 +215,81 @@ const handleReset = () => {
 
 const handleEdit = (row: any & { id: number }) => {
   router.push({
-    name: 'EditJadwal',
+    name: 'editJadwal',
     params: { id: row.id },
   })
 }
 
-const handleDelete = async (row: any) => {
-  if (!confirm(`Hapus jadwal ${row.mataKuliah}?`)) return
-
-  try {
-    await dashboardAPI.deleteJadwal(row.id)
-    alert('Jadwal berhasil dihapus!')
-    // Refresh data after delete
-    await Promise.all([fetchJadwalData(), fetchFilterData()])
-  } catch (error: any) {
-    console.error('Error deleting jadwal:', error)
-    alert('Gagal menghapus jadwal. ' + (error.message || ''))
+const handleDelete = (row: any) => {
+  // Show confirmation dialog instead of browser confirm
+  dialogTitle.value = 'Hapus Data Jadwal'
+  dialogSubtitle.value = `Anda yakin ingin menghapus jadwal ${row.mataKuliah}? Data yang sudah dihapus tidak dapat dipulihkan.`
+  dialogAction.value = 'Hapus'
+  pendingAction.value = {
+    type: 'delete',
+    data: row,
   }
+  dialogOpen.value = true
+}
+
+const handleDeleteSelected = (selectedIds: number[]) => {
+  if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
+    alert('Tidak ada data yang dipilih')
+    return
+  }
+
+  // Show confirmation dialog for bulk delete
+  dialogTitle.value = 'Hapus Data Jadwal'
+  dialogSubtitle.value = `Anda yakin ingin menghapus ${selectedIds.length} jadwal yang dipilih? Data yang sudah dihapus tidak dapat dipulihkan.`
+  dialogAction.value = 'Hapus'
+  pendingAction.value = {
+    type: 'deleteSelected',
+    selectedIds: selectedIds,
+  }
+  dialogOpen.value = true
+}
+
+const handleDialogConfirm = async () => {
+  dialogOpen.value = false
+
+  if (!pendingAction.value) return
+
+  if (pendingAction.value.type === 'delete') {
+    // Execute single delete
+    const row = pendingAction.value.data
+    try {
+      await dashboardAPI.deleteJadwal(row.id)
+      success('Jadwal berhasil dihapus!')
+      await Promise.all([fetchJadwalData(), fetchFilterData()])
+    } catch (err: any) {
+      console.error('Error deleting jadwal:', err)
+      error('Gagal menghapus jadwal')
+    }
+  } else if (pendingAction.value.type === 'deleteSelected') {
+    // Execute bulk delete
+    const selectedIds = pendingAction.value.selectedIds || []
+    isLoading.value = true
+    apiError.value = ''
+
+    try {
+      await dashboardAPI.deleteSelectedJadwal(selectedIds)
+      alert(`${selectedIds.length} jadwal berhasil dihapus`)
+      await Promise.all([fetchJadwalData(), fetchFilterData()])
+    } catch (error: any) {
+      console.error('Bulk delete failed:', error)
+      apiError.value =
+        error.response?.data?.message || error.message || 'Gagal menghapus jadwal yang dipilih'
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  pendingAction.value = null
+}
+
+const handleDialogCancel = () => {
+  dialogOpen.value = false
+  pendingAction.value = null
 }
 
 const handleDetail = (row: any) => {
@@ -251,8 +318,10 @@ onMounted(async () => {
 
 <template>
   <div class="no-print">
-    <p class="text-4xl font-bold text-black">Dashboard Jadwal Perkuliahan</p>
-    <p class="text-xl font-base text-black mb-8">Monitor dan kelola perkuliahan kampus</p>
+    <div class="mb-6 mt-10 sm:mt-10 xl:mt-0">
+      <p class="text-xl sm:text-3xl font-bold text-black">Dashboard Jadwal Perkuliahan</p>
+      <p class="text-sm sm:text-base text-black">Monitor dan kelola perkuliahan kampus</p>
+    </div>
 
     <!-- API Error Message -->
     <div
@@ -286,7 +355,7 @@ onMounted(async () => {
     />
 
     <!-- Table -->
-    <DashboardTable
+    <!-- <DashboardTable
       v-if="!isLoading && !apiError"
       :columns="columns"
       :data="filteredData"
@@ -295,6 +364,27 @@ onMounted(async () => {
       @delete="handleDelete"
       @print="handlePrint"
       @detail="handleDetail"
+    /> -->
+
+    <CustomTable
+      v-if="!isLoading && !apiError"
+      :columns="columns"
+      :data="filteredData"
+      :has-actions="true"
+      @edit="handleEdit"
+      @delete="handleDelete"
+      @deleteSelected="handleDeleteSelected"
+      @print="handlePrint"
+      @detail="handleDetail"
+    />
+
+    <ConfirmationDialog
+      :isOpen="dialogOpen"
+      :title="dialogTitle"
+      :subtitle="dialogSubtitle"
+      :actionText="dialogAction"
+      @confirm="handleDialogConfirm"
+      @cancel="handleDialogCancel"
     />
   </div>
   <!-- Print Page -->

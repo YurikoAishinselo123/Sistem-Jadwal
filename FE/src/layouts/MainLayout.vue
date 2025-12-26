@@ -6,7 +6,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 p-10 font-sans flex flex-col min-h-0">
+    <main class="flex-1 p-8 font-sans flex flex-col min-h-0">
       <router-view class="flex-1 min-h-0" />
     </main>
 
