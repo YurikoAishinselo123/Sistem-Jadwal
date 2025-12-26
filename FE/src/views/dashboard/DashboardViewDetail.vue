@@ -75,9 +75,9 @@ const handleEdit = () => router.push(`/edit-jadwal/${jadwalId}`)
 
 <template>
   <!-- Header -->
-  <div class="mb-8 mt-12 sm:mt-10 xl:mt-0">
+  <div class="mb-6 mt-10 sm:mt-10 xl:mt-0">
     <h1 class="text-xl sm:text-3xl font-bold text-black">Detail Jadwal</h1>
-    <p class="text-sm sm:text-lg text-black">Monitor dan kelola perkuliahan kampus</p>
+    <p class="text-sm sm:text-base text-black">Monitor dan kelola perkuliahan kampus</p>
   </div>
 
   <!-- Detail Card -->
@@ -92,10 +92,17 @@ const handleEdit = () => router.push(`/edit-jadwal/${jadwalId}`)
           <p class="text-lg font-bold text-black">{{ scheduleData.periodeTahunAjaran }}</p>
         </div>
 
-        <!-- Jenis Jadwal -->
-        <div>
-          <p class="text-sm text-gray-600 mb-2">Jenis Jadwal</p>
-          <p class="text-lg font-bold text-black">{{ scheduleData.jenisJadwal }}</p>
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Jenis Jadwal -->
+          <div>
+            <p class="text-sm text-gray-600 mb-2">Jenis Jadwal</p>
+            <p class="text-lg font-bold text-black">{{ scheduleData.jenisJadwal }}</p>
+          </div>
+
+          <div>
+            <p class="text-sm text-gray-600 mb-2">Kelas</p>
+            <p class="text-lg font-bold text-black">{{ scheduleData.kelas }}</p>
+          </div>
         </div>
 
         <!-- Mata Kuliah -->
@@ -116,25 +123,32 @@ const handleEdit = () => router.push(`/edit-jadwal/${jadwalId}`)
           <p class="text-lg font-bold text-black">{{ scheduleData.dosen1 }}</p>
         </div>
 
-        <!-- Laboran -->
+        <!-- Dosen 2 -->
         <div>
-          <p class="text-sm text-gray-600 mb-2">Laboran</p>
-          <p class="text-lg font-bold text-black">{{ scheduleData.laboran }}</p>
+          <p class="text-sm text-gray-600 mb-2">Dosen 2</p>
+          <p class="text-lg font-bold text-black">{{ scheduleData.dosen2 }}</p>
+        </div>
+
+        <!-- Dosen 3 -->
+        <div>
+          <p class="text-sm text-gray-600 mb-2">Dosen 3</p>
+          <p class="text-lg font-bold text-black">{{ scheduleData.dosen2 }}</p>
         </div>
       </div>
 
       <!-- Right Column -->
       <div class="space-y-8">
-        <!-- Hari -->
-        <div>
-          <p class="text-sm text-gray-600 mb-2">Hari</p>
-          <p class="text-lg font-bold text-black">{{ scheduleData.hari }}</p>
-        </div>
-
-        <!-- Waktu Perkuliahan -->
-        <div>
-          <p class="text-sm text-gray-600 mb-2">Waktu Perkuliahan</p>
-          <p class="text-lg font-bold text-black">{{ scheduleData.waktuPerkuliahan }}</p>
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Hari -->
+          <div>
+            <p class="text-sm text-gray-600 mb-2">Hari</p>
+            <p class="text-lg font-bold text-black">{{ scheduleData.hari }}</p>
+          </div>
+          <!-- Waktu Perkuliahan -->
+          <div>
+            <p class="text-sm text-gray-600 mb-2">Waktu Perkuliahan</p>
+            <p class="text-lg font-bold text-black">{{ scheduleData.waktuPerkuliahan }}</p>
+          </div>
         </div>
 
         <!-- SKS & Sesi (Same Row) -->
@@ -152,19 +166,13 @@ const handleEdit = () => router.push(`/edit-jadwal/${jadwalId}`)
         <!-- Kelas & Ruang Kelas (Same Row) -->
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <p class="text-sm text-gray-600 mb-2">Kelas</p>
-            <p class="text-lg font-bold text-black">{{ scheduleData.kelas }}</p>
-          </div>
-          <div>
-            <p class="text-sm text-gray-600 mb-2">Ruang Kelas</p>
+            <p class="text-sm text-gray-600 mb-2">Ruang Kelas Teori</p>
             <p class="text-lg font-bold text-black">{{ scheduleData.ruangKelas }}</p>
           </div>
-        </div>
-
-        <!-- Dosen 2 -->
-        <div>
-          <p class="text-sm text-gray-600 mb-2">Dosen 2</p>
-          <p class="text-lg font-bold text-black">{{ scheduleData.dosen2 }}</p>
+          <div>
+            <p class="text-sm text-gray-600 mb-2">Ruang Kelas Praktek</p>
+            <p class="text-lg font-bold text-black">{{ scheduleData.ruangKelas }}</p>
+          </div>
         </div>
 
         <!-- Status & Jenis Makul (Same Row) -->
@@ -178,11 +186,23 @@ const handleEdit = () => router.push(`/edit-jadwal/${jadwalId}`)
             <p class="text-lg font-bold text-black">{{ scheduleData.jenisMakul }}</p>
           </div>
         </div>
+
+        <!-- Laboran -->
+        <div>
+          <p class="text-sm text-gray-600 mb-2">Laboran 1</p>
+          <p class="text-lg font-bold text-black">{{ scheduleData.laboran }}</p>
+        </div>
+
+        <!-- Laboran -->
+        <div>
+          <p class="text-sm text-gray-600 mb-2">Laboran 2</p>
+          <p class="text-lg font-bold text-black">{{ scheduleData.laboran }}</p>
+        </div>
       </div>
     </div>
 
     <!-- Action Buttons -->
-    <div class="flex justify-end gap-4 mt-12 pt-8">
+    <div class="flex justify-end gap-4 pt-8">
       <button
         @click="handleBack"
         class="px-8 py-2 font-semibold border-2 border-active-blue text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"

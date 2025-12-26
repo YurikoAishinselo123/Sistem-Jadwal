@@ -14,4 +14,8 @@ export const dashboardAPI = {
   createJadwal: (data: any) => apiClient.post(`/jadwal`, data),
   updateJadwal: (id: number, data: any) => apiClient.put(`/jadwal/${id}`, data),
   deleteJadwal: (id: number) => apiClient.delete(`/jadwal/${id}`),
+  deleteSelectedJadwal: (ids: number[]) =>
+    apiClient.delete('/jadwal/', {
+      data: { ids },
+    }),
 }

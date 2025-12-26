@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 import MainLayout from '@/layouts/MainLayout.vue'
 import DashboardView from '@/views/DashboardView.vue'
-import TambahJadwalView from '@/views/TambahJadwalView.vue'
+// import TambahJadwalView from '@/views/TambahJadwalView.vue'
 import BebanKerjaDosenView from '@/views/BebanKerjaDosenView.vue'
 import BebanRuangKelasView from '@/views/BebanRuangKelasView.vue'
 import MasterDataLayout from '@/layouts/MasterDataLayout.vue'
@@ -9,14 +9,14 @@ import MasterDataDosen from '@/views/masterData/MasterDataDosen.vue'
 import MasterDataMakul from '@/views/masterData/MasterDataMakul.vue'
 import MasterDataLaboran from '@/views/masterData/MasterDataLaboran.vue'
 import MasterDataRuangKelas from '@/views/masterData/MasterDataRuangKelas.vue'
-import tes from '@/views/tesView.vue'
 // import MasterDataWaktuPerkuliahan from '@/views/masterData/MasterDataWaktuPerkuliahan.vue'
 import DashboardViewDetail from '@/views/dashboard/DashboardViewDetail.vue'
-import JadwalForm from '@/views/dashboard/JadwalForm.vue'
 import MasterDataPeriode from '@/views/masterData/MasterDataPeriode.vue'
 import LoginPage from '@/views/authentication/LoginPage.vue'
 import SignupPage from '@/views/authentication/SignupPage.vue'
 import MasterDataProdi from '@/views/masterData/MasterDataProdi.vue'
+import TambahJadwal from '@/views/dashboard/TambahJadwal.vue'
+import EditJadwal from '@/views/dashboard/EditJadwal.vue'
 
 const routes = [
   // Auth routes (no layout)
@@ -53,28 +53,25 @@ const routes = [
       {
         path: '/jadwal/tambah',
         name: 'tambahJadwal',
-        component: TambahJadwalView,
+        component: TambahJadwal,
         props: { mode: 'add' },
       },
-      {
-        path: '/tes',
-        name: 'tes',
-        component: tes,
-      },
-      {
-        path: '/jadwal',
-        name: 'jadwal',
-        component: JadwalForm,
-      },
+
       {
         path: '/jadwal/edit/:id',
-        name: 'EditJadwal',
-        component: JadwalForm,
-        props: (route: RouteLocationNormalized) => ({
-          mode: 'edit',
-          id: Number(route.params.id),
-        }),
+        name: 'editJadwal',
+        component: EditJadwal,
       },
+
+      // {
+      //   path: '/jadwal/edit/:id',
+      //   name: 'EditJadwal',
+      //   component: JadwalForm,
+      //   props: (route: RouteLocationNormalized) => ({
+      //     mode: 'edit',
+      //     id: Number(route.params.id),
+      //   }),
+      // },
       {
         path: 'beban-kerja-dosen',
         name: 'bebanKerjaDosen',

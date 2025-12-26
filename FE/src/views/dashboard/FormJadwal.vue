@@ -1,13 +1,21 @@
 <script setup lang="ts">
 import { reactive, computed, watch, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import CustomDropdown from '@/components/CustomDropdown.vue'
-
 import { dashboardAPI } from '@/services/dashboardAPI'
-import { useToast } from '@/composables/UseToast'
 
-const router = useRouter()
-const { success, error } = useToast()
+// Props
+interface Props {
+  initialData?: any
+  mode: 'create' | 'edit'
+}
+
+const props = defineProps<Props>()
+
+// Emits
+const emit = defineEmits<{
+  submit: [payload: any]
+  cancel: []
+}>()
 
 // Type definitions
 interface Periode {
@@ -46,11 +54,6 @@ interface RuanganTeori {
   nama_ruangan_teori: string
 }
 
-interface WaktuKuliah {
-  id: number
-  waktu: string
-}
-
 interface ApiData {
   periode: Periode[]
   prodi: Prodi[]
@@ -59,7 +62,6 @@ interface ApiData {
   laboran: Laboran[]
   ruanganPraktek: RuanganPraktek[]
   ruanganTeori: RuanganTeori[]
-  waktu: WaktuKuliah[]
 }
 
 // API data storage
@@ -71,7 +73,6 @@ const apiData = ref<ApiData>({
   laboran: [],
   ruanganPraktek: [],
   ruanganTeori: [],
-  waktu: [],
 })
 
 const isLoading = ref(true)
@@ -98,7 +99,7 @@ const timeSlots = {
 const allTimeSlots = [...timeSlots.pagi, ...timeSlots.malam]
 const isOnline = computed(() => formData.status === 'Online')
 
-// Form data - stores display values with separate variables
+// Form data
 const formData = reactive({
   periodeTahunAjaran: '',
   hari: '',
@@ -178,9 +179,51 @@ const fetchFormData = async () => {
   }
 }
 
+// Populate form with initial data (for edit mode)
+const populateForm = () => {
+  if (!props.initialData || props.mode !== 'edit') return
+
+  const data = props.initialData
+
+  // Set display values
+  formData.periodeTahunAjaran = data.periode || ''
+  formData.hari = data.hari_jadwal || ''
+  formData.jenisJadwal = data.jenis_jadwal || ''
+  formData.waktuMulai = data.waktu_mulai || ''
+  formData.waktuSelesai = data.waktu_selesai || ''
+  formData.mataKuliah = data.nama_makul || ''
+  formData.status = data.status || ''
+  formData.programStudi = data.nama_prodi || ''
+  formData.kelas = data.kelas || ''
+  formData.dosen1 = data.nama_dosen_1 || ''
+  formData.dosen2 = data.nama_dosen_2 || ''
+  formData.dosen3 = data.nama_dosen_3 || ''
+  formData.laboran1 = data.nama_laboran || ''
+  formData.laboran2 = data.nama_laboran_2 || ''
+  formData.ruanganKelasPraktek = data.nama_ruangan_praktek || ''
+  formData.ruangKelasTeori = data.nama_ruangan_teori || ''
+
+  // Set IDs
+  selectedIds.periodeId = data.periode_tahun_id || null
+  selectedIds.prodiId = data.prodi_id || null
+  selectedIds.makulId = data.makul_id || null
+  selectedIds.dosen1Id = data.dosen_1 || null
+  selectedIds.dosen2Id = data.dosen_2 || null
+  selectedIds.dosen3Id = data.dosen_3 || null
+  selectedIds.laboran1Id = data.laboran_id || null
+  selectedIds.laboran2Id = data.laboran_2_id || null
+  selectedIds.ruanganPraktekId = data.ruangan_praktek_id || null
+  selectedIds.ruanganTeoriId = data.ruangan_teori_id || null
+
+  // Show optional fields if they have values
+  if (data.nama_dosen_3) showDosen3.value = true
+  if (data.nama_laboran_2) showLaboran2.value = true
+}
+
 // Fetch data on component mount
-onMounted(() => {
-  fetchFormData()
+onMounted(async () => {
+  await fetchFormData()
+  populateForm()
 })
 
 // Get selected makul object
@@ -219,11 +262,10 @@ const hasEnoughSlots = computed(() => {
   return availableSlots >= requiredSlots
 })
 
-// Calculate end time based on start time and sesi_makul (within same session)
+// Calculate end time based on start time and sesi_makul
 const calculateEndTime = (startTime: string, sesiMakul: number): string | null => {
   if (!startTime || !sesiMakul) return null
 
-  // Determine which session the start time belongs to
   let session: 'pagi' | 'malam' | null = null
   if (timeSlots.pagi.includes(startTime)) session = 'pagi'
   else if (timeSlots.malam.includes(startTime)) session = 'malam'
@@ -231,26 +273,21 @@ const calculateEndTime = (startTime: string, sesiMakul: number): string | null =
   if (!session) return null
 
   const sessionTimes = timeSlots[session]
-
-  // Find the start time index in the session
   const startIndex = sessionTimes.indexOf(startTime)
   if (startIndex === -1) return null
 
-  // Calculate end time index within the same session
   const endIndex = startIndex + sesiMakul
 
-  // Check if end index is valid within the session
   if (endIndex < 0 || endIndex >= sessionTimes.length) {
     console.warn('End time exceeds available time slots in the current session')
     return null
   }
 
-  // Return the time slot at the calculated index
   const endTime = sessionTimes[endIndex]
   return endTime ?? null
 }
 
-// Auto-calculate waktu selesai when waktuMulai or mataKuliah changes
+// Auto-calculate waktu selesai
 watch([() => formData.waktuMulai, () => formData.mataKuliah], () => {
   if (formData.waktuMulai && selectedMakul.value) {
     if (!hasEnoughSlots.value) {
@@ -267,7 +304,7 @@ watch([() => formData.waktuMulai, () => formData.mataKuliah], () => {
 // Available start times
 const availableStartTimes = computed(() => allTimeSlots)
 
-// Filter dosen options - exclude already selected dosens
+// Filter dosen options
 const dosen1Options = computed(() => {
   return apiData.value.dosen
     .map((item) => item.nama_dosen)
@@ -286,7 +323,7 @@ const dosen3Options = computed(() => {
     .filter((name) => name !== formData.dosen1 && name !== formData.dosen2)
 })
 
-// Filter laboran options - exclude already selected laborans
+// Filter laboran options
 const laboran1Options = computed(() => {
   return apiData.value.laboran
     .map((item) => item.nama_laboran)
@@ -447,7 +484,7 @@ const handleSubmit = async () => {
   // Reset errors
   Object.keys(showError).forEach((key) => (showError[key as keyof typeof showError] = false))
 
-  // Validate required fields (excluding optional dosen3 and laboran2)
+  // Validate required fields
   const requiredFields = Object.keys(showError).filter((key) => {
     if ((key === 'ruanganKelasPraktek' || key === 'ruanganKelasTeori') && isOnline.value) {
       return false
@@ -463,7 +500,7 @@ const handleSubmit = async () => {
     return
   }
 
-  // Validate waktu_selesai is calculated
+  // Validate waktu_selesai
   if (!formData.waktuSelesai) {
     alert('Waktu selesai tidak dapat dihitung. Periksa waktu mulai dan mata kuliah.')
     return
@@ -478,7 +515,7 @@ const handleSubmit = async () => {
     return
   }
 
-  // Prepare payload with IDs (dosen3 and laboran2 are optional)
+  // Prepare payload
   const payload = {
     periode_tahun_id: selectedIds.periodeId,
     hari_jadwal: formData.hari,
@@ -491,34 +528,19 @@ const handleSubmit = async () => {
     kelas: formData.kelas,
     dosen_1: selectedIds.dosen1Id,
     dosen_2: selectedIds.dosen2Id,
-    ...(selectedIds.dosen3Id && { dosen_3: selectedIds.dosen3Id }), // Optional
+    ...(selectedIds.dosen3Id && { dosen_3: selectedIds.dosen3Id }),
     laboran_1: selectedIds.laboran1Id,
-    ...(selectedIds.laboran2Id && { laboran_2: selectedIds.laboran2Id }), // Optional
+    ...(selectedIds.laboran2Id && { laboran_2: selectedIds.laboran2Id }),
     ...(isOnline.value ? {} : { ruangan_praktek_id: selectedIds.ruanganPraktekId }),
     ...(isOnline.value ? {} : { ruangan_teori_id: selectedIds.ruanganTeoriId }),
   }
 
-  try {
-    const response = await dashboardAPI.createJadwal(payload)
-    success('Jadwal berhasil ditambahkan!')
-
-    const message = response?.data?.message
-    if (message) {
-      return error(message)
-    }
-
-    router.push({ name: 'dashboard' })
-  } catch (err: any) {
-    const message = err?.response?.data.message || 'Gagal menambahkan jadwal'
-    error(message)
-  }
+  emit('submit', payload)
 }
 
 // Cancel
 const handleCancel = () => {
-  if (confirm('Apakah Anda yakin ingin membatalkan? Data yang diisi akan hilang.')) {
-    router.push({ name: 'dashboard' })
-  }
+  emit('cancel')
 }
 
 // Clear error on field change
@@ -533,13 +555,6 @@ Object.keys(formData).forEach((key) => {
 </script>
 
 <template>
-  <div class="mb-8 mt-10 sm:mt-14 xl:mt-0">
-    <h1 class="text-xl sm:text-3xl font-bold text-black">Tambah Jadwal</h1>
-    <p class="text-sm sm:text-lg text-black">
-      Isi form di bawah untuk menambahkan jadwal perkuliahan
-    </p>
-  </div>
-
   <!-- Loading state -->
   <div v-if="isLoading" class="bg-white rounded-xl shadow-lg p-8">
     <div class="flex items-center justify-center py-12">
@@ -553,7 +568,7 @@ Object.keys(formData).forEach((key) => {
   </div>
 
   <!-- Form -->
-  <div v-else class="bg-white rounded-xl shadow-lg p-8 h-[78vh] overflow-y-auto">
+  <div v-else class="bg-white rounded-xl shadow-lg p-8 h-[80vh] overflow-y-auto">
     <form @submit.prevent="handleSubmit" class="space-y-10">
       <!-- Info Akademik -->
       <div>
